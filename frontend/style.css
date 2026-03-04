@@ -1,3 +1,980 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/*
+ * Airtable Interface Extensions Stylesheet with Tailwind CSS
+ * ============================================================
+ * This file provides Tailwind CSS with design tokens mapped from Airtable's design system. 
+ *
+ * How it works:
+ * -------------
+ * - Tailwind CSS v3 is imported via @tailwind directives below
+ * - Custom design tokens are configured in `tailwind.config.js`
+ * - You can use Tailwind utility classes that automatically match Airtable's design system
+ * - Example: `bg-gray-gray50` uses Airtable's gray50 color
+ *
+ * **This Stylesheet is optional!**
+ * --------------------------------
+ * You are *not* required to use Tailwind. To opt-out:
+ * 1. Remove the `import './style.css';` line from `index.tsx`.
+ * 2. Remove the bundler configuration from `block.json`.
+ * 3. (Optional) Delete the `style.css`, `bundler.js`, and `tailwind.config.js` files.
+ *
+ * Using Tailwind classes:
+ * ----------------------
+ * You can use Tailwind classes that are mapped to Airtable's design tokens:
+ * - Colors: `text-gray-gray900` (uses Airtable's gray900), `bg-blue-blue` (uses Airtable's blue)
+ * - Spacing: `p-4` (16px), `m-2` (8px) 
+ * - Typography: `text-base` (13px, Airtable's body-default), `font-display` (Inter Display)
+ * - Shadows: `shadow-sm` (uses Airtable's elevation-low)
+ */
+
+/* ============================================================
+   Living Design 3.5 / PX Pattern Library – Design Tokens
+   ============================================================ */
+
+:root {
+  /* Brand & Neutrals — Airtable palette per brand guidelines */
+  --color-brand-primary: #2d7ff9;
+  --color-brand-hover: #1a6ce8;
+  --color-bg-app: #f2f4f7;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #f0f4ff;
+  --color-bg-active: #e8f0fe;
+  --color-bg-inverse: #001E60; /* Bentonville Blue — dark headers */
+  --color-text-main: #333333;
+  --color-text-muted: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-border: #e5e4e4;
+  --color-border-light: #f0f1f2;
+  --color-border-subtle: #ebebeb;
+
+  /* Semantic / Status Colors — style guide palette */
+  --color-status-success: #20c933;
+  --color-status-success-text: #338a17;
+  --color-status-success-bg: #d1f7c4;
+  --color-status-warning: #fcb400;
+  --color-status-warning-text: #b87503;
+  --color-status-warning-bg: #ffeab6;
+  --color-status-danger: #f82b60;
+  --color-status-danger-text: #ba1e45;
+  --color-status-danger-bg: #ffdce5;
+
+  /* AI / Purple */
+  --color-ai: #8b46ff;
+  --color-ai-bg: #ede2fe;
+
+  /* Typography — Inter per brand guidelines */
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --text-body-m: 15px;
+  --text-body-s: 13px;
+  --text-caption: 11px;
+  --text-heading-s: 15px;
+  --text-heading-m: 20px;
+
+  /* Shadows & Radii — per spec */
+  --radius-xs: 3px;   /* checkbox */
+  --radius-sm: 4px;   /* chips/badges */
+  --radius-md: 6px;   /* buttons/inputs */
+  --radius-lg: 8px;   /* cards/menus */
+  --radius-hero: 12px; /* hero cards */
+  --shadow-card: none;
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.07);
+  --shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.14);
+  --shadow-sheet: -4px 0 24px rgba(0, 0, 0, 0.12);
+
+  --color-bg-dark: #1a1f2e;
+  --color-bg-darkest: #0f1623;
+  --gradient-primary: linear-gradient(135deg, #2d7ff9 0%, #1a6fe8 100%);
+  --gradient-dark-header: linear-gradient(135deg, #1a1f2e 0%, #0f1623 100%);
+}
+
+/* Global foundation – main app container */
+.initiative-report {
+  background-color: var(--color-bg-app);
+  font-family: var(--font-family-base);
+  color: var(--color-text-main);
+}
+
+/* Product Hub header icon – light brand/neutral (no dark navy) */
+.product-hub-icon {
+  width: 34px;
+  height: 34px;
+  background-color: rgba(0, 113, 206, 0.12);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Summary card (Portfolio Health) – standard card, no dark header */
+.summary-banner {
+  background-color: var(--color-bg-card);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.summary-banner .summary-banner__muted {
+  color: var(--color-text-muted);
+}
+.summary-banner .summary-banner__legend {
+  color: var(--color-text-main);
+}
+.summary-banner .summary-bar-track {
+  background: var(--color-border-light);
+  border-radius: 3px;
+  padding: 2px;
+}
+
+/* Tailwind directives – processed by PostCSS at build time */
+/* stylelint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
+
+/* ============================================================
+   Side Sheet – enterprise drill-in experience
+   Replaces modal/pop-over for consistent UX.
+   ============================================================ */
+
+.side-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(46, 47, 50, 0.52);
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.side-sheet-overlay.side-sheet-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.side-sheet-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 60vw;
+  min-width: 600px;
+  max-width: 900px;
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-sheet);
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.side-sheet-overlay.side-sheet-open .side-sheet-panel {
+  transform: translateX(0);
+}
+
+/* Contextual header at top of side sheet (Living Design) */
+.side-sheet-context {
+  flex-shrink: 0;
+  padding: 20px 24px 16px;
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border);
+}
+.side-sheet-context .context-label {
+  display: block;
+  font-size: var(--text-caption);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+.side-sheet-context .context-title {
+  font-size: var(--text-heading-s);
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+  line-height: 1.25;
+}
+
+/* Status notes under Initiative Status in initiative detail */
+.status-notes-box {
+  background-color: var(--color-bg-app);
+  border-left: 3px solid var(--color-status-warning-text);
+  padding: 12px;
+  margin-top: 8px;
+  font-size: var(--text-body-s);
+  color: var(--color-text-muted);
+  font-family: var(--font-family-base);
+}
+
+.epic-list-container {
+  margin-top: 12px;
+  padding-left: 16px;
+  border-left: 2px dashed var(--color-border);
+}
+
+.epic-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  background-color: var(--color-bg-app);
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.side-sheet-header {
+  flex-shrink: 0;
+  padding: 20px 24px;
+  background: var(--color-brand-primary);
+  color: var(--color-bg-card);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.side-sheet-header__title-group {
+  min-width: 0;
+}
+
+.side-sheet-header__eyebrow {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.side-sheet-back-link {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.side-sheet-initiative-row {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 14px 20px;
+  background: var(--color-bg-card);
+  cursor: pointer;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.12s;
+}
+.side-sheet-initiative-row:hover {
+  background: var(--color-bg-hover);
+  box-shadow: none;
+}
+.side-sheet-initiative-row:first-child {
+  border-top: 1px solid var(--color-border);
+}
+
+.card-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.side-sheet-header__title {
+  font-size: var(--text-heading-s);
+  font-weight: 700;
+  color: #fff;
+  margin-top: 4px;
+  line-height: 1.25;
+}
+
+.side-sheet-header__close {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-bg-card);
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.side-sheet-header__close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.side-sheet-finance-banner {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background: var(--color-status-warning-bg);
+  border-bottom: 2px solid var(--color-status-warning-text);
+  color: var(--color-status-warning-text);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family-base);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.side-sheet-finance-banner--missing {
+  background: var(--color-status-danger-bg);
+  border-bottom-color: var(--color-status-danger-text);
+  color: var(--color-status-danger-text);
+}
+
+.side-sheet-finance-banner__icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.side-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ============================================================
+   Dependency tags – distinct from status (portfolio risks)
+   ============================================================ */
+
+.dep-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.dep-tag {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.dep-tag--count {
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.dep-tag--complexity {
+  background: var(--color-border-light);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
+}
+
+.dep-tag--complexity-low {
+  background: var(--color-status-success-bg);
+  color: var(--color-status-success-text);
+  border: 1px solid var(--color-status-success-text);
+}
+
+.dep-tag--complexity-medium {
+  background: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+  border: 1px solid var(--color-status-warning-text);
+}
+
+.dep-tag--complexity-high {
+  background: var(--color-status-danger-bg);
+  color: var(--color-status-danger-text);
+  border: 1px solid var(--color-status-danger-text);
+}
+
+/* ============================================================
+   Dependency pill (SideSheet capability cards) – single pill, dynamic color
+   ============================================================ */
+
+.dependency-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.dependency-pill--low {
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+
+.dependency-pill--medium {
+  background: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+  border-color: var(--color-status-warning-text);
+}
+
+.dependency-pill--high {
+  background: var(--color-status-danger-bg);
+  color: var(--color-status-danger-text);
+  border-color: var(--color-status-danger-text);
+}
+
+/* ============================================================
+   Capability card (SideSheet) – clean flex layout
+   ============================================================ */
+
+.capability-card {
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  background: var(--color-bg-card);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.capability-card__main {
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+.capability-card__title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-main);
+}
+
+.capability-card__meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.capability-card__dependency {
+  margin-top: 8px;
+}
+
+.capability-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.capability-card__size-badge {
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Metrics Health section (SideSheet capability cards) */
+.capability-card__metrics {
+  width: 100%;
+  flex-basis: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 2fr) 70px 70px 70px 90px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.metric-grid-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.metric-col-right {
+  text-align: right;
+}
+
+.capability-card__metrics-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+}
+
+.capability-metric-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.capability-metric-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.capability-metric-row:first-child {
+  padding-top: 0;
+}
+
+.capability-metric-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-main);
+  min-width: 0;
+  flex: 1 1 140px;
+}
+
+.metric-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-main);
+}
+
+.capability-metric-values {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.capability-metric-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.capability-metric-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.capability-metric-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-main);
+  line-height: 1.2;
+}
+
+.capability-metric-value--actual {
+  color: var(--color-brand-primary);
+}
+
+/* ============================================================
+   Stat row (aggregation cards) – prevent wrapping, align numbers
+   ============================================================ */
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* Stat row grid: give first two columns room so "Initiatives" / "Capabilities" don't truncate */
+.stat-row-container .stat-label {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.stat-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   Dual RAG status – user vs AI discrepancy
+   ============================================================ */
+
+.dual-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dual-status__warning {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-status-warning-bg);
+  color: var(--color-status-warning);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dual-status__ai-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-border-light);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border);
+  white-space: nowrap;
+}
+
+/* Card variant: prominent warning when AI disagrees */
+.dual-status--card {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dual-status__card-warning {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-status-warning-text);
+  background: var(--color-status-warning-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-status-warning-text);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Standalone button variants (non-.btn class context)
+   ============================================================ */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family-base);
+  color: #fff;
+  background: var(--gradient-primary);
+  box-shadow: 0 1px 4px rgba(45,127,249,0.25);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity 0.15s, box-shadow 0.15s;
+}
+
+.btn-primary:hover {
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(45,127,249,0.4);
+}
+
+/* Secondary outline button */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family-base);
+  color: var(--color-brand-primary);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.btn-secondary:hover {
+  background: var(--color-bg-app);
+  border-color: var(--color-brand-primary);
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   Living Design – Component Classes (Phase B)
+   ============================================================ */
+
+/* --- Cards --- */
+.ld-card {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+  transition: box-shadow 0.15s ease, border-color 0.12s ease;
+}
+.ld-card:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+.ld-card.selected {
+  border: 2px solid var(--color-brand-primary);
+}
+
+/* PCard / AggCard layout (with optional top accent bar) */
+.ld-card.pcard {
+  padding: 22px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.ld-card.aggcard {
+  padding: 0;
+  overflow: hidden;
+}
+.ld-card.aggcard:hover {
+  box-shadow: 0 8px 40px rgba(0,0,0,0.11);
+  transform: translateY(-2px);
+}
+
+/* Priority view: two sections (Enterprise / Other) */
+.priority-section {
+  margin-bottom: 8px;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.ld-card.capability-card {
+  padding: 14px 16px;
+}
+
+/* --- Buttons — 6px radius per spec, md: 7px 14px, sm: 5px 10px --- */
+.btn {
+  font-family: var(--font-family-base);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.12s, opacity 0.15s, box-shadow 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  border: none;
+}
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.btn-outline {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+}
+.btn-outline:hover {
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-primary);
+  background-color: var(--color-bg-app);
+}
+.btn.btn-primary {
+  background: var(--gradient-primary);
+  border: none;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(45,127,249,0.25);
+}
+.btn.btn-primary:hover {
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(45,127,249,0.4);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Attention banner expanded list row hover */
+.attention-table-row:hover {
+  background-color: var(--color-bg-hover);
+}
+
+/* --- Badges & Chips — always 4px radius, 2px 8px padding, 11px/600 per spec --- */
+.ld-badge {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-family-base);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.badge-neutral {
+  background-color: #f3f4f6;
+  color: var(--color-text-muted);
+}
+.badge-success {
+  background-color: var(--color-status-success-bg);
+  color: var(--color-status-success-text);
+}
+.badge-warning {
+  background-color: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+}
+.badge-danger {
+  background-color: var(--color-status-danger-bg);
+  color: var(--color-status-danger-text);
+}
+.badge-red {
+  background-color: var(--color-status-danger-bg);
+  color: var(--color-status-danger-text);
+}
+.badge-yellow {
+  background-color: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+}
+.badge-green {
+  background-color: var(--color-status-success-bg);
+  color: var(--color-status-success-text);
+}
+.badge-ai {
+  background-color: var(--color-ai-bg);
+  color: var(--color-ai);
+  border: 1px solid rgba(139, 70, 255, 0.25);
+}
+.badge-ai-warning {
+  background-color: var(--color-status-warning-bg);
+  color: var(--color-status-warning-text);
+  border: 1px dashed var(--color-status-warning);
+}
+
+/* Epic row status dot (Side Sheet hierarchy) — bright colors for visual dots */
+.status-dot {
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+.status-dot.on-track,
+.status-dot.green { color: var(--color-status-success); }
+.status-dot.at-risk,
+.status-dot.yellow { color: var(--color-status-warning); }
+.status-dot.off-track,
+.status-dot.red { color: var(--color-status-danger); }
+
+/* --- Typography --- */
+.ld-heading-m {
+  font-size: var(--text-heading-m);
+  font-weight: 700;
+  color: var(--color-text-main);
+  font-family: var(--font-family-base);
+}
+.ld-heading-s {
+  font-size: var(--text-heading-s);
+  font-weight: 700;
+  color: var(--color-text-main);
+  font-family: var(--font-family-base);
+}
+.ld-body-m {
+  font-size: var(--text-body-m);
+  color: var(--color-text-main);
+  font-family: var(--font-family-base);
+}
+.ld-body-s {
+  font-size: var(--text-body-s);
+  color: var(--color-text-main);
+  font-family: var(--font-family-base);
+}
+.ld-caption {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+  font-family: var(--font-family-base);
+}
+
+/* Status text (no background, for stat legends) — use dark variants for readability */
+.text-success { color: var(--color-status-success-text); }
+.text-warning { color: var(--color-status-warning-text); }
+.text-danger { color: var(--color-status-danger-text); }
+
+/* Market multi-select dropdown option hover */
+.market-dropdown-option:hover {
+  background-color: var(--color-bg-app);
+}
+
+/* --- Print (PDF export via window.print) --- */
+@media print {
+  body {
+    background-color: white;
+  }
+  .export-group,
+  .global-filters,
+  .side-sheet-container,
+  .side-sheet-overlay {
+    display: none !important;
+  }
+  .ld-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
