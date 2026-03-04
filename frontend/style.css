@@ -1,5 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+/* Walmart EverydaySans — brand display font */
+@font-face {
+  font-family: 'EverydaySans';
+  src: url('./assets/fonts/EverydaySans-Regular-Web.woff2') format('woff2'),
+       url('./assets/fonts/EverydaySans-Regular-Web.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'EverydaySans';
+  src: url('./assets/fonts/EverydaySans-Medium-Web.woff2') format('woff2'),
+       url('./assets/fonts/EverydaySans-Medium-Web.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'EverydaySans';
+  src: url('./assets/fonts/EverydaySans-Bold-Web.woff2') format('woff2'),
+       url('./assets/fonts/EverydaySans-Bold-Web.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /*
  * Airtable Interface Extensions Stylesheet with Tailwind CSS
  * ============================================================
