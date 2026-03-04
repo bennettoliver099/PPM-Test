@@ -33,14 +33,16 @@
    ============================================================ */
 
 :root {
-  /* Brand & Neutrals — Airtable palette per brand guidelines */
+  /* Brand & Neutrals — Walmart Solutions brand guide */
   --color-brand-primary: #2d7ff9;
   --color-brand-hover: #1a6ce8;
+  --color-blue: #2d7ff9;
+  --color-blue-hover: #1a6ce8;
+  --color-blue-soft: #cfdfff;
   --color-bg-app: #f2f4f7;
   --color-bg-card: #ffffff;
   --color-bg-hover: #f0f4ff;
   --color-bg-active: #e8f0fe;
-  --color-bg-inverse: #001E60; /* Bentonville Blue — dark headers */
   --color-text-main: #333333;
   --color-text-muted: #6b7280;
   --color-text-tertiary: #9ca3af;
@@ -48,45 +50,74 @@
   --color-border-light: #f0f1f2;
   --color-border-subtle: #ebebeb;
 
-  /* Semantic / Status Colors — style guide palette */
+  /* Semantic / Status Colors */
   --color-status-success: #20c933;
   --color-status-success-text: #338a17;
   --color-status-success-bg: #d1f7c4;
+  --color-green: #20c933;
+  --color-green-soft: #d1f7c4;
+  --color-green-dark: #338a17;
   --color-status-warning: #fcb400;
   --color-status-warning-text: #b87503;
   --color-status-warning-bg: #ffeab6;
+  --color-amber: #fcb400;
+  --color-amber-soft: #ffeab6;
+  --color-amber-dark: #b87503;
   --color-status-danger: #f82b60;
   --color-status-danger-text: #ba1e45;
   --color-status-danger-bg: #ffdce5;
+  --color-red: #f82b60;
+  --color-red-soft: #ffdce5;
+  --color-red-dark: #ba1e45;
 
   /* AI / Purple */
   --color-ai: #8b46ff;
   --color-ai-bg: #ede2fe;
+  --color-purple: #8b46ff;
+  --color-purple-soft: #ede2fe;
+  --color-purple-dark: #6b1cb0;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+
+  /* Transitions — exact brand spec, no other durations */
+  --transition-bg: background 0.12s;
+  --transition-opacity: opacity 0.15s;
+  --transition-shadow: box-shadow 0.15s;
+  --transition-border: border-color 0.12s;
 
   /* Typography — Inter per brand guidelines */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --text-page-title: 20px;
+  --text-section-title: 15px;
+  --text-body: 13px;
   --text-body-m: 15px;
   --text-body-s: 13px;
   --text-caption: 11px;
+  --text-label: 10px;
   --text-heading-s: 15px;
   --text-heading-m: 20px;
 
   /* Shadows & Radii — per spec */
-  --radius-xs: 3px;   /* checkbox */
-  --radius-sm: 4px;   /* chips/badges */
-  --radius-md: 6px;   /* buttons/inputs */
-  --radius-lg: 8px;   /* cards/menus */
-  --radius-hero: 12px; /* hero cards */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-hero: 12px;
+  --radius-pill: 100px;
   --shadow-card: none;
   --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.07);
   --shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
   --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.14);
   --shadow-sheet: -4px 0 24px rgba(0, 0, 0, 0.12);
-
-  --color-bg-dark: #1a1f2e;
-  --color-bg-darkest: #0f1623;
-  --gradient-primary: linear-gradient(135deg, #2d7ff9 0%, #1a6fe8 100%);
-  --gradient-dark-header: linear-gradient(135deg, #1a1f2e 0%, #0f1623 100%);
 }
 
 /* Global foundation – main app container */
@@ -232,8 +263,9 @@
 .side-sheet-header {
   flex-shrink: 0;
   padding: 20px 24px;
-  background: var(--color-brand-primary);
-  color: var(--color-bg-card);
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -246,14 +278,14 @@
 
 .side-sheet-header__eyebrow {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .side-sheet-back-link {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-muted);
 }
 
 .side-sheet-initiative-row {
@@ -290,31 +322,32 @@
 }
 
 .side-sheet-header__title {
-  font-size: var(--text-heading-s);
+  font-size: var(--text-heading-m);
   font-weight: 700;
-  color: #fff;
+  color: var(--color-text-main);
   margin-top: 4px;
   line-height: 1.25;
 }
 
 .side-sheet-header__close {
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border: none;
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--color-bg-card);
-  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-muted);
+  font-size: 16px;
   cursor: pointer;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease;
+  transition: background 0.12s, border-color 0.12s;
 }
 
 .side-sheet-header__close:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--color-bg-hover);
+  border-color: var(--color-blue);
 }
 
 .side-sheet-finance-banner {

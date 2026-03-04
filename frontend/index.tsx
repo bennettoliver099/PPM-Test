@@ -16,6 +16,107 @@ import { getCapabilities } from "./types";
 import { usePortfolioData } from "./usePortfolioData";
 import "./style.css";
 
+// --- Brand Tokens (single source of truth for all inline styles) ---
+const C = {
+  bgPage: "#f2f4f7", bgPanel: "#ffffff", bgHover: "#f0f4ff", bgActive: "#e8f0fe",
+  border: "#e5e4e4", borderLight: "#f0f1f2",
+  textPrimary: "#333333", textSecondary: "#6b7280", textTertiary: "#9ca3af",
+  blue: "#2d7ff9", blueHover: "#1a6ce8", blueSoft: "#cfdfff",
+  green: "#20c933", greenSoft: "#d1f7c4", greenDark: "#338a17",
+  amber: "#fcb400", amberSoft: "#ffeab6", amberDark: "#b87503",
+  red: "#f82b60", redSoft: "#ffdce5", redDark: "#ba1e45",
+  purple: "#8b46ff", purpleSoft: "#ede2fe", purpleDark: "#6b1cb0",
+  walmartTrueBlue: "#0053E2", walmartBentonvilleBlue: "#001E60",
+  walmartSparkYellow: "#FFC220", // LOGO ONLY — never UI chrome
+  shadowCard: "none", shadowCardHover: "0 2px 8px rgba(0,0,0,0.07)",
+  shadowDropdown: "0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+  shadowModal: "0 8px 32px rgba(0,0,0,0.14)", shadowSheet: "-4px 0 24px rgba(0,0,0,0.12)",
+  radiusCheckbox: 3, radiusChip: 4, radiusButton: 6, radiusCard: 8, radiusHero: 12, radiusPill: 100,
+  font: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+} as const;
+
+// --- SVG Icon Primitives (fill="none", stroke, strokeWidth=1.75, round caps) ---
+const SVG_DEFAULTS = { fill: "none", strokeWidth: "1.75", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+
+function IconX({ size = 16, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <line x1="4" y1="4" x2="12" y2="12" /><line x1="12" y1="4" x2="4" y2="12" />
+    </svg>
+  );
+}
+
+function IconArrowLeft({ size = 14, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <path d="M10 3L5 8l5 5" />
+    </svg>
+  );
+}
+
+function IconChevronDown({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <path d="M2 4l4 4 4-4" />
+    </svg>
+  );
+}
+
+function IconChevronUp({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <path d="M2 8l4-4 4 4" />
+    </svg>
+  );
+}
+
+function IconChevronRight({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <path d="M4 2l4 4-4 4" />
+    </svg>
+  );
+}
+
+function IconAlertTriangle({ size = 16, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <path d="M8 2L1.5 13h13L8 2z" /><line x1="8" y1="7" x2="8" y2="10" /><circle cx="8" cy="12" r="0.5" fill={color} stroke="none" />
+    </svg>
+  );
+}
+
+function IconSparkle({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <path d="M6 1v2M6 9v2M1 6h2M9 6h2M2.5 2.5l1.4 1.4M8.1 8.1l1.4 1.4M9.5 2.5L8.1 3.9M3.9 8.1L2.5 9.5" />
+    </svg>
+  );
+}
+
+function IconExternalLink({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <path d="M7 2h3v3M10 2L5.5 6.5M6 3H3a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V7" />
+    </svg>
+  );
+}
+
+function IconLink({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" {...SVG_DEFAULTS} stroke={color} aria-hidden>
+      <path d="M5 6.5a2.5 2.5 0 0 0 3.5.3l1.5-1.5A2.5 2.5 0 0 0 6.5 2L5.8 2.7" />
+      <path d="M7 5.5a2.5 2.5 0 0 0-3.5-.3L2 6.7A2.5 2.5 0 0 0 5.5 10l.7-.7" />
+    </svg>
+  );
+}
+
+function StatusDot({ color, size = 6 }: { color: string; size?: number }) {
+  return (
+    <span style={{ display: "inline-block", width: size, height: size, borderRadius: "50%", background: color, flexShrink: 0 }} />
+  );
+}
+
 // --- Constants ---
 const PALETTE: readonly string[] = [
   "#90D6F9", "#AACF9A", "#ACC8FB", "#A3DBE9", "#FFEDBC", "#D0C2D8",
@@ -197,10 +298,10 @@ function Bar({
       className="progress-bar-container"
       style={{
         display: "flex",
-        height: "8px",
+        height: "4px",
         borderRadius: "4px",
         overflow: "hidden",
-        backgroundColor: "var(--color-bg-app)",
+        backgroundColor: "var(--color-border-light)",
       }}
     >
       {totalStatus === 0 ? (
@@ -247,8 +348,8 @@ function DependencyPill({ depCount, depScore }: { depCount: number; depScore: nu
   const variant =
     complexity === "High" ? "badge-danger" : complexity === "Medium" ? "badge-warning" : "badge-neutral";
   return (
-    <span className={`ld-badge ${variant}`}>
-      🔗 {depCount} GPA Dependencies ({complexity} Complexity)
+    <span className={`ld-badge ${variant}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+      <IconLink size={11} color="currentColor" /> {depCount} GPA Dependencies ({complexity} Complexity)
     </span>
   );
 }
@@ -269,8 +370,8 @@ function DualStatusBadge({
     return (
       <span className="dual-status dual-status--card">
         <Badge status={userStatus} />
-        <span className="dual-status__card-warning" title={`AI recommends: ${aiLabel}`}>
-          ⚠️ AI flags as {aiLabel}
+        <span className="dual-status__card-warning" title={`AI recommends: ${aiLabel}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <IconAlertTriangle size={12} color="currentColor" /> AI flags as {aiLabel}
         </span>
       </span>
     );
@@ -366,11 +467,11 @@ function StatRow({
           <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.capabilitiesTotal ?? 0}</div>
         </div>
         <div onClick={() => onStat?.("on-track")} className="stat-box" style={dotCol}>
-          <span style={{ color: "var(--color-status-success)", fontSize: 14 }}>●</span>
+          <StatusDot color={C.green} size={7} />
           <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{onTrackCount}</span>
         </div>
         <div onClick={() => onStat?.("at-risk")} className="stat-box" style={dotCol}>
-          <span style={{ color: "var(--color-status-warning)", fontSize: 14 }}>●</span>
+          <StatusDot color={C.amber} size={7} />
           <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{atRiskCount}</span>
         </div>
         <div
@@ -378,7 +479,7 @@ function StatRow({
           className="stat-box"
           style={{ ...statBoxLast, ...dotCol, borderRight: "none" }}
         >
-          <span style={{ color: "var(--color-status-danger)", fontSize: 14 }}>●</span>
+          <StatusDot color={C.red} size={7} />
           <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{offTrackCount}</span>
         </div>
       </div>
@@ -391,28 +492,28 @@ function StatRow({
         display: "grid",
         gridTemplateColumns: gridCols,
         borderBottom: "1px solid var(--color-border-light)",
-        background: "var(--color-border-light)",
+        background: "var(--color-bg-card)",
       }}
     >
       <div className="stat-box" style={statBoxBase}>
         <div className="stat-label" style={headerStyle}>Initiatives</div>
-        <div className="stat-value-row" style={{ fontSize: 24, fontWeight: 700, color: "var(--color-text-main)" }}>{data.count ?? 0}</div>
+        <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.count ?? 0}</div>
       </div>
       <div className="stat-box" style={statBoxBase}>
         <div className="stat-label" style={headerStyle}>Capabilities</div>
-        <div className="stat-value-row" style={{ fontSize: 24, fontWeight: 700, color: "var(--color-text-main)" }}>{data.capabilitiesTotal ?? 0}</div>
+        <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.capabilitiesTotal ?? 0}</div>
       </div>
       <div onClick={() => onStat?.("on-track")} className="stat-box" style={dotCol}>
-        <span style={{ color: "var(--color-status-success)", fontSize: 14 }}>●</span>
-        <span style={{ fontSize: 24, fontWeight: 700, color: "var(--color-text-main)" }}>{onTrackCount}</span>
+        <StatusDot color={C.green} size={7} />
+        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{onTrackCount}</span>
       </div>
       <div onClick={() => onStat?.("at-risk")} className="stat-box" style={dotCol}>
-        <span style={{ color: "var(--color-status-warning)", fontSize: 14 }}>●</span>
-        <span style={{ fontSize: 24, fontWeight: 700, color: "var(--color-text-main)" }}>{atRiskCount}</span>
+        <StatusDot color={C.amber} size={7} />
+        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{atRiskCount}</span>
       </div>
       <div onClick={() => onStat?.("off-track")} className="stat-box" style={statBoxLast}>
-        <span style={{ color: "var(--color-status-danger)", fontSize: 14 }}>●</span>
-        <span style={{ fontSize: 24, fontWeight: 700, color: "var(--color-text-main)" }}>{offTrackCount}</span>
+        <StatusDot color={C.red} size={7} />
+        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{offTrackCount}</span>
       </div>
     </div>
   );
@@ -499,56 +600,40 @@ function SideSheet({
         role="presentation"
       >
         <div className="side-sheet-panel" onClick={(e) => e.stopPropagation()}>
-          <header
-            className="side-sheet-header"
-            style={{
-              background: "linear-gradient(135deg, #1a1f2e 0%, #0f1623 100%)",
-              color: "#fff",
-            }}
-          >
+          <header className="side-sheet-header">
             <div className="side-sheet-header__title-group">
               <button
                 type="button"
                 onClick={() => onSelectInitiative(null)}
                 className="side-sheet-back-link"
                 style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: 11,
-                  cursor: "pointer",
-                  padding: 0,
-                  marginBottom: 8,
-                  textAlign: "left",
-                  color: "rgba(255,255,255,0.5)",
-                  fontWeight: 500,
-                  letterSpacing: "0.02em",
-                  fontFamily: "inherit",
+                  background: "none", border: "none", fontSize: 11, cursor: "pointer",
+                  padding: 0, marginBottom: 8, textAlign: "left",
+                  color: C.textSecondary, fontWeight: 500, letterSpacing: "0.02em",
+                  fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4,
                 }}
               >
-                ← Back to Priority
+                <IconArrowLeft size={12} color={C.textSecondary} /> Back to Priority
               </button>
               <div className="side-sheet-header__title">{initiative.name}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                {/* Status badge */}
                 <span style={{
-                  fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                  background: detailHeaderBg + "30", color: detailHeaderBg,
-                  border: `1px solid ${detailHeaderBg}50`,
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: C.radiusChip,
+                  background: detailHeaderBg + "18", color: detailHeaderBg,
+                  border: `1px solid ${detailHeaderBg}40`,
                   textTransform: "uppercase", letterSpacing: "0.08em",
                 }}>
-                  ● {initiative.trueStatus?.replace(/-/g, " ")}
+                  <StatusDot color={detailHeaderBg} size={5} />
+                  {initiative.trueStatus?.replace(/-/g, " ")}
                 </span>
                 {[initiative.gpa, ...initiative.segments].filter(Boolean).map((g) => (
                   <span
                     key={g}
                     style={{
-                      fontSize: 11,
-                      background: "rgba(255,255,255,0.08)",
-                      color: "rgba(255,255,255,0.7)",
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                      fontWeight: 500,
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      fontSize: 11, background: C.bgPage, color: C.textSecondary,
+                      padding: "2px 8px", borderRadius: C.radiusChip, fontWeight: 500,
+                      border: `1px solid ${C.border}`,
                     }}
                   >
                     {g}
@@ -556,13 +641,8 @@ function SideSheet({
                 ))}
               </div>
             </div>
-            <button
-              type="button"
-              className="side-sheet-header__close"
-              onClick={onClose}
-              aria-label="Close"
-            >
-              ×
+            <button type="button" className="side-sheet-header__close" onClick={onClose} aria-label="Close">
+              <IconX size={14} color={C.textSecondary} />
             </button>
           </header>
           {contextLabel != null && contextLabel !== "" && (
@@ -671,8 +751,8 @@ function SideSheet({
                               {cap.status || "Unassigned"}
                             </span>
                             {cap.aiStatus && cap.aiStatus !== cap.status && (
-                              <span className="ld-badge badge-ai" title="AI detects a discrepancy">
-                                ✦ AI flags as {cap.aiStatus}
+                              <span className="ld-badge badge-ai" title="AI detects a discrepancy" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                                <IconSparkle size={10} color="currentColor" /> AI flags as {cap.aiStatus}
                               </span>
                             )}
                           </div>
@@ -698,7 +778,7 @@ function SideSheet({
                               }}
                               onClick={() => alert(`Navigating to Roadmap for ${cap.name}`)}
                             >
-                              View Roadmap <span style={{ fontSize: "14px" }}>↗</span>
+                              View Roadmap <IconExternalLink size={11} color="currentColor" />
                             </div>
                           </div>
                           {/* Status Notes */}
@@ -746,7 +826,7 @@ function SideSheet({
                                       border: "1px solid var(--color-border-subtle)",
                                     }}
                                   >
-                                    <span className={`status-dot ${epic.status?.toLowerCase().replace(/\s+/g, "-")}`}>●</span>
+                                    <StatusDot color={epic.status?.toLowerCase() === "red" ? C.red : epic.status?.toLowerCase() === "yellow" ? C.amber : C.green} size={7} />
                                     <span style={{ color: "var(--color-text-main)", fontWeight: 500 }}>{epic.name}</span>
                                     <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--color-text-muted)" }}>{epic.status}</span>
                                   </div>
@@ -842,8 +922,8 @@ function SideSheet({
                           {cap.status || "Unassigned"}
                         </span>
                         {cap.aiStatus && cap.aiStatus !== cap.status && (
-                          <span className="ld-badge badge-ai" title="AI detects a discrepancy">
-                            ✦ AI flags as {cap.aiStatus}
+                          <span className="ld-badge badge-ai" title="AI detects a discrepancy" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                            <IconSparkle size={10} color="currentColor" /> AI flags as {cap.aiStatus}
                           </span>
                         )}
                       </div>
@@ -908,7 +988,7 @@ function SideSheet({
                                   border: "1px solid var(--color-border-subtle)",
                                 }}
                               >
-                                <span className={`status-dot ${epic.status?.toLowerCase().replace(/\s+/g, "-")}`}>●</span>
+                                <StatusDot color={epic.status?.toLowerCase() === "red" ? C.red : epic.status?.toLowerCase() === "yellow" ? C.amber : C.green} size={7} />
                                 <span style={{ color: "var(--color-text-main)", fontWeight: 500 }}>{epic.name}</span>
                                 <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--color-text-muted)" }}>{epic.status}</span>
                               </div>
@@ -967,54 +1047,32 @@ function SideSheet({
     <div className="side-sheet-overlay side-sheet-open" onClick={onClose} role="presentation">
       <div className="side-sheet-panel" onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-          {/* Dark Gradient Header - sophisticated, not childish color flood */}
-          <div style={{ background: "linear-gradient(135deg, #1a1f2e 0%, #0f1623 100%)", padding: "24px 28px", color: "#fff", position: "relative" }}>
+          <div style={{ background: C.bgPanel, borderBottom: `1px solid ${C.border}`, padding: "20px 24px", position: "relative" }}>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              style={{
-                position: "absolute",
-                top: "16px",
-                right: "16px",
-                background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: "6px",
-                width: "28px",
-                height: "28px",
-                color: "rgba(255,255,255,0.6)",
-                fontSize: "14px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "background 0.12s",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+              className="side-sheet-header__close"
+              style={{ position: "absolute", top: 16, right: 16 }}
             >
-              ✕
+              <IconX size={14} color={C.textSecondary} />
             </button>
-            {/* Status badge in header */}
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 8 }}>
               <span style={{
-                fontSize: 10,
-                fontWeight: 700,
-                padding: "2px 8px",
-                borderRadius: 4,
-                background: headerBg + "30",
-                color: headerBg,
-                border: `1px solid ${headerBg}50`,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
+                display: "inline-flex", alignItems: "center", gap: 5,
+                fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: C.radiusChip,
+                background: headerBg + "18", color: headerBg,
+                border: `1px solid ${headerBg}40`,
+                textTransform: "uppercase", letterSpacing: "0.08em",
               }}>
-                ● {overallStatus}
+                <StatusDot color={headerBg} size={5} />
+                {overallStatus}
               </span>
             </div>
-            <h2 style={{ margin: "0 0 4px 0", fontSize: 20, fontWeight: 700, lineHeight: 1.2, paddingRight: "40px", letterSpacing: "-0.02em" }}>
+            <h2 style={{ margin: "0 0 2px 0", fontSize: 20, fontWeight: 700, color: C.textPrimary, lineHeight: 1.2, paddingRight: 48, letterSpacing: "-0.01em" }}>
               {cleanTitle}
             </h2>
-            <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 400 }}>
+            <p style={{ margin: 0, fontSize: 12, color: C.textSecondary, fontWeight: 400 }}>
               Executive Priority Drill-Down
             </p>
           </div>
@@ -1073,11 +1131,13 @@ function SideSheet({
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1, marginBottom: 4 }}>
                 <span style={{
-                  padding: "3px 10px", borderRadius: 4, fontSize: 12,
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "3px 10px", borderRadius: C.radiusChip, fontSize: 12,
                   background: headerBg + "18", color: headerBg,
                   border: `1px solid ${headerBg}40`, fontWeight: 600,
                 }}>
-                  ● {overallStatus}
+                  <StatusDot color={headerBg} size={5} />
+                  {overallStatus}
                 </span>
               </div>
               <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 8 }}>
@@ -1103,7 +1163,7 @@ function SideSheet({
                       <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                         <Badge status={init.trueStatus} />
                         {hasAiDiscrepancy && (
-                          <span className="ld-badge badge-ai" title={`AI flags as ${init.aiStatus}`}>✦ AI</span>
+                          <span className="ld-badge badge-ai" title={`AI flags as ${init.aiStatus}`} style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><IconSparkle size={10} color="currentColor" /> AI</span>
                         )}
                       </div>
                     </div>
@@ -1115,7 +1175,7 @@ function SideSheet({
                       {init.rawFinance && <><span style={{ color: "var(--color-border)" }}>·</span><span style={{ fontWeight: 500, color: "var(--color-text-main)" }}>{init.rawFinance}</span></>}
                     </div>
                   </div>
-                  <span style={{ fontSize: 16, color: "var(--color-text-muted)", flexShrink: 0 }}>›</span>
+                  <IconChevronRight size={14} color="var(--color-text-muted)" />
                 </button>
               );
             })}
@@ -1235,6 +1295,7 @@ function AggCard({
   }
 
   const cleanTitle = title.replace(/^Enterprise Priority:\s*/i, "");
+  const [isHovered, setIsHovered] = useState(false);
 
   const virtualP: Priority = {
     name: title,
@@ -1261,93 +1322,49 @@ function AggCard({
           onOpenSheet(virtualP);
         }
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = `0 8px 40px rgba(0,0,0,0.11), 0 0 0 4px ${borderColor}18`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
-      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         display: "flex",
         flexDirection: "column",
         height: "100%",
         padding: "24px",
-        backgroundColor: "var(--color-bg-card)",
-        borderRadius: "12px",
-        border: "1px solid var(--color-border)",
-        borderLeft: `6px solid ${borderColor}`,
+        backgroundColor: C.bgPanel,
+        borderRadius: C.radiusCard,
+        border: `1px solid ${C.border}`,
         cursor: "pointer",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        boxShadow: isHovered ? C.shadowCardHover : C.shadowCard,
+        transition: "box-shadow 0.15s, border-color 0.12s",
         opacity: initiatives.length === 0 ? 0.6 : 1,
       }}
     >
-      {/* Top: Clean Title (Prefix Removed) */}
-      <div
-        style={{
-          fontSize: "15px",
-          fontWeight: 600,
-          color: "var(--color-text-main)",
-          marginBottom: "16px",
-          lineHeight: "1.4",
-          minHeight: "42px",
-        }}
-      >
-        {cleanTitle}
-      </div>
-
-      {/* Hero Metric: Spread out */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          marginBottom: "20px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-          <div
-            style={{
-              fontSize: "28px",
-              fontWeight: 700,
-              color: "var(--color-text-main)",
-              lineHeight: "1",
-              letterSpacing: "-1px",
-            }}
-          >
-            {initiatives.length}
-          </div>
-          <div
-            style={{
-              fontSize: "12px",
-              fontWeight: 700,
-              color: "var(--color-text-muted)",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            Initiatives
-          </div>
+      {/* Top: Clean Title + Status Badge */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 16 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, lineHeight: 1.4, minHeight: 40 }}>
+          {cleanTitle}
         </div>
-        {/* Status Badge - tinted by status color */}
         <div
           style={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: borderColor,
-            textTransform: "uppercase",
-            letterSpacing: "0.07em",
-            padding: "3px 8px",
-            background: borderColor + "14",
-            border: `1px solid ${borderColor}35`,
-            borderRadius: 4,
-            whiteSpace: "nowrap",
+            display: "flex", alignItems: "center", gap: 5,
+            fontSize: 10, fontWeight: 700, color: borderColor,
+            textTransform: "uppercase", letterSpacing: "0.07em",
+            padding: "3px 8px", background: borderColor + "14",
+            border: `1px solid ${borderColor}35`, borderRadius: C.radiusChip,
+            whiteSpace: "nowrap", flexShrink: 0,
           }}
         >
-          ● {statusText}
+          <StatusDot color={borderColor} size={5} />
+          {statusText}
+        </div>
+      </div>
+
+      {/* Initiative count */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 20 }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, lineHeight: 1 }}>
+          {initiatives.length}
+        </div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          Initiatives
         </div>
       </div>
 
@@ -2160,19 +2177,19 @@ function App() {
       <div
         className="global-app-header"
         style={{
-          background: "linear-gradient(135deg, #1a1f2e 0%, #0f1623 100%)",
-          padding: "16px 24px",
+          background: C.bgPanel,
+          borderBottom: `1px solid ${C.border}`,
+          padding: "14px 24px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: "12px",
-          color: "#fff",
           margin: "-24px -32px 24px -32px",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <svg viewBox="0 0 100 100" width={32} height={32} xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0, marginRight: "4px" }} aria-hidden>
-            <g fill="#FFC220">
+          <svg viewBox="0 0 100 100" width={28} height={28} xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }} aria-hidden>
+            <g fill={C.walmartSparkYellow}>
               <rect x="42.5" y="5" width="15" height="28" rx="7.5" />
               <rect x="42.5" y="5" width="15" height="28" rx="7.5" transform="rotate(60 50 50)" />
               <rect x="42.5" y="5" width="15" height="28" rx="7.5" transform="rotate(120 50 50)" />
@@ -2181,13 +2198,10 @@ function App() {
               <rect x="42.5" y="5" width="15" height="28" rx="7.5" transform="rotate(300 50 50)" />
             </g>
           </svg>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Product Hub</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 500, marginTop: 1 }}>Executive Strategic Portfolio</div>
-          </div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, letterSpacing: "-0.01em" }}>Product Hub</div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.9)" }}>
-          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#FFC220" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: C.textSecondary }}>
+          <StatusDot color={C.green} size={7} />
           Live · {fy === "All" ? "All Years" : fy}
         </div>
       </div>
@@ -2231,8 +2245,8 @@ function App() {
                 <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "var(--color-status-warning)", flexShrink: 0 }} />
                 {attentionCount} items need attention
               </span>
-              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-status-warning-text)" }}>
-                View Details {isBannerExpanded ? "▲" : "▼"}
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-status-warning-text)", display: "flex", alignItems: "center", gap: 4 }}>
+                View Details {isBannerExpanded ? <IconChevronUp size={12} color="currentColor" /> : <IconChevronDown size={12} color="currentColor" />}
               </span>
             </div>
             {isBannerExpanded && attentionItems.length > 0 && (
@@ -2470,8 +2484,8 @@ function App() {
           </span>
         ))}
         <span style={{ fontSize: 11, color: "var(--color-text-muted)", marginLeft: 8 }}>PM · AI Status</span>
-        <span style={{ fontSize: 11, color: "var(--color-brand-primary)", fontWeight: 600 }}>
-          ↗ Click a card to open side sheet
+        <span style={{ fontSize: 11, color: "var(--color-brand-primary)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <IconExternalLink size={10} color="currentColor" /> Click a card to open side sheet
         </span>
       </div>
     </div>
