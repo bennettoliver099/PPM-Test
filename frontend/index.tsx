@@ -346,7 +346,7 @@ function StatRow({
           display: "grid",
           gridTemplateColumns: gridCols,
           borderBottom: "1px solid var(--color-border-light)",
-          background: "var(--color-border-light)",
+          background: "var(--color-bg-card)",
         }}
       >
         <div className="stat-box" style={statBoxBase}>
@@ -571,20 +571,10 @@ function SideSheet({
               <h2 className="context-title">{contextTitle}</h2>
             </div>
           )}
-          <div
-            className={`side-sheet-finance-banner ${isMissing ? "side-sheet-finance-banner--missing" : ""}`}
-            style={{
-              backgroundColor: "var(--color-status-warning-bg)",
-              color: "var(--color-status-warning-text)",
-              borderBottom: "1px solid var(--color-status-warning-text)",
-              padding: "12px 24px",
-              fontSize: "12px",
-              fontWeight: 600,
-            }}
-          >
-            <span className="side-sheet-finance-banner__icon" aria-hidden style={{ marginRight: 8 }}>
-              ⚠
-            </span>
+          <div className={`side-sheet-finance-banner ${isMissing ? "side-sheet-finance-banner--missing" : ""}`}>
+            <svg className="side-sheet-finance-banner__icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden style={{ width: 14, height: 14, flexShrink: 0 }}>
+              <path d="M8 1.333A6.667 6.667 0 1 0 8 14.667 6.667 6.667 0 0 0 8 1.333zm.667 10H7.333V7.333h1.334V11.333zm0-5.333H7.333V4.667h1.334V6z"/>
+            </svg>
             <span>Target GMV/MRR: {initiative.financeProjection?.trim() || "MISSING"}</span>
           </div>
           <div className="side-sheet-body">
@@ -594,79 +584,24 @@ function SideSheet({
                 gridTemplateColumns: "repeat(3, 1fr)",
                 gap: "16px",
                 padding: "16px 24px",
-                backgroundColor: "var(--color-bg-app)",
                 borderBottom: "1px solid var(--color-border)",
-                marginBottom: 16,
+                marginBottom: 8,
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    textTransform: "uppercase",
-                    color: "var(--color-text-muted)",
-                    fontWeight: 600,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Product Lead
-                </span>
-                <span
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    color: "var(--color-text-main)",
-                  }}
-                >
-                  {initiative.productLead?.trim() || "Unassigned"}
-                </span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    textTransform: "uppercase",
-                    color: "var(--color-text-muted)",
-                    fontWeight: 600,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Status
-                </span>
-                <span
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 700,
-                    color: detailHeaderBg,
-                  }}
-                >
-                  {initiative.trueStatus || "Unknown"}
-                </span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    textTransform: "uppercase",
-                    color: "var(--color-text-muted)",
-                    fontWeight: 600,
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  Risks
-                </span>
-                <span
-                  style={{
-                    fontSize: "13px",
-                    color: initiative.risks?.trim()
-                      ? "var(--color-status-danger)"
-                      : "var(--color-text-muted)",
-                    fontWeight: initiative.risks?.trim() ? 500 : 400,
-                  }}
-                >
-                  {initiative.risks?.trim() || "None provided"}
-                </span>
-              </div>
+              {[
+                { label: "Product Lead", value: initiative.productLead?.trim() || "Unassigned", color: "var(--color-text-main)" as string | undefined },
+                { label: "Status", value: initiative.trueStatus?.replace(/-/g, " ") || "Unknown", color: detailHeaderBg },
+                { label: "Risks", value: initiative.risks?.trim() || "None", color: initiative.risks?.trim() ? "var(--color-status-danger-text)" : "var(--color-text-muted)" },
+              ].map((item) => (
+                <div key={item.label} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span style={{ fontSize: 10, textTransform: "uppercase", color: "var(--color-text-muted)", fontWeight: 600, letterSpacing: "0.06em" }}>
+                    {item.label}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: item.color ?? "var(--color-text-main)", textTransform: item.label === "Status" ? ("capitalize" as const) : ("none" as const) }}>
+                    {item.value}
+                  </span>
+                </div>
+              ))}
             </div>
             <div className="hierarchy-container" style={{ display: "flex", flexDirection: "column", gap: "24px", marginTop: "24px" }}>
               {initiative.projects?.map((project) => (
@@ -1151,45 +1086,39 @@ function SideSheet({
             </div>
           </div>
         </div>
-        <div className="side-sheet-body">
-            {displayedInitiatives.map((init) => (
-              <button
-                key={init.id}
-                type="button"
-                onClick={() => onSelectInitiative(init)}
-                className="side-sheet-initiative-row"
-              >
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="ld-body-s" style={{ fontWeight: 700, fontSize: 13, color: "var(--color-text-main)" }}>{init.name}</div>
-                  <div className="ld-caption" style={{ marginTop: 2, color: "var(--color-text-muted)" }}>{init.gpa} · {init.segments.join(", ")}</div>
-                  <div className="card-meta-row" style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", marginTop: 12, fontSize: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontWeight: 600, color: "var(--color-text-muted)" }}>Status:</span>
-                      <Badge status={init.trueStatus} />
-                      {init.aiStatus && (() => {
-                        const norm = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
-                        if (norm(init.aiStatus) !== init.trueStatus) {
-                          return (
-                            <span className="ld-badge badge-ai" title="AI detects a discrepancy">
-                              ✦ AI flags as {init.aiStatus}
-                            </span>
-                          );
-                        }
-                        return null;
-                      })()}
+        <div className="side-sheet-body" style={{ padding: 0, gap: 0 }}>
+            {displayedInitiatives.map((init) => {
+              const hasAiDiscrepancy = init.aiStatus && init.aiStatus.toLowerCase().replace(/\s+/g, "-") !== init.trueStatus;
+              return (
+                <button
+                  key={init.id}
+                  type="button"
+                  onClick={() => onSelectInitiative(init)}
+                  className="side-sheet-initiative-row"
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    {/* Top row: name + status badge */}
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                      <div className="ld-body-s" style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-main)", lineHeight: 1.4 }}>{init.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                        <Badge status={init.trueStatus} />
+                        {hasAiDiscrepancy && (
+                          <span className="ld-badge badge-ai" title={`AI flags as ${init.aiStatus}`}>✦ AI</span>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontWeight: 600, color: "var(--color-text-muted)" }}>Lead:</span>
-                      <span style={{ color: "var(--color-text-main)" }}>{init.productLead?.trim() || "Unassigned"}</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontWeight: 600, color: "var(--color-text-muted)" }}>Finance:</span>
-                      <span style={{ color: "var(--color-text-main)", fontWeight: 500 }}>{init.rawFinance ?? "—"}</span>
+                    {/* Bottom row: meta */}
+                    <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "var(--color-text-muted)", flexWrap: "wrap" }}>
+                      <span>{init.gpa}</span>
+                      {init.segments.length > 0 && <><span style={{ color: "var(--color-border)" }}>·</span><span>{init.segments.join(", ")}</span></>}
+                      {init.productLead?.trim() && <><span style={{ color: "var(--color-border)" }}>·</span><span>{init.productLead.trim()}</span></>}
+                      {init.rawFinance && <><span style={{ color: "var(--color-border)" }}>·</span><span style={{ fontWeight: 500, color: "var(--color-text-main)" }}>{init.rawFinance}</span></>}
                     </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                  <span style={{ fontSize: 16, color: "var(--color-text-muted)", flexShrink: 0 }}>›</span>
+                </button>
+              );
+            })}
         </div>
       </div>
     </div>
@@ -1242,7 +1171,6 @@ function PCard({
           <span className="text-danger">{priority.offTrack} off track</span>
         </div>
       </div>
-      <div className="ld-caption" style={{ color: "var(--color-brand-primary)", fontWeight: 600 }}>View details →</div>
     </div>
   );
 }
@@ -1423,77 +1351,40 @@ function AggCard({
         </div>
       </div>
 
-      {/* Secondary Metrics: Grid with dividers */}
+      {/* Secondary Metrics: Clean borderless row */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           width: "100%",
-          backgroundColor: "var(--color-bg-app)",
-          borderRadius: "8px",
+          borderTop: "1px solid var(--color-border-subtle)",
+          borderBottom: "1px solid var(--color-border-subtle)",
           marginBottom: "20px",
-          padding: "12px 0",
+          padding: "10px 0",
         }}
       >
-        {/* Groups */}
-        <div style={{ display: "flex", flexDirection: "column", textAlign: "center" }}>
-          <span
+        {[
+          { label: "Groups", value: totalGroups },
+          { label: "Projects", value: totalProjects },
+          { label: "Capabilities", value: totalCapabilities },
+        ].map((item, i) => (
+          <div
+            key={item.label}
             style={{
-              fontSize: "9px",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-              fontWeight: 600,
+              display: "flex",
+              flexDirection: "column",
+              textAlign: "center",
+              borderLeft: i > 0 ? "1px solid var(--color-border-subtle)" : "none",
             }}
           >
-            Groups
-          </span>
-          <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text-main)", marginTop: "4px" }}>
-            {totalGroups}
-          </span>
-        </div>
-        {/* Projects */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            textAlign: "center",
-            borderLeft: "1px solid var(--color-border-subtle)",
-            borderRight: "1px solid var(--color-border-subtle)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "9px",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-              fontWeight: 600,
-            }}
-          >
-            Projects
-          </span>
-          <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text-main)", marginTop: "4px" }}>
-            {totalProjects}
-          </span>
-        </div>
-        {/* Capabilities */}
-        <div style={{ display: "flex", flexDirection: "column", textAlign: "center" }}>
-          <span
-            style={{
-              fontSize: "9px",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-              fontWeight: 600,
-            }}
-          >
-            Capabilities
-          </span>
-          <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text-main)", marginTop: "4px" }}>
-            {totalCapabilities}
-          </span>
-        </div>
+            <span style={{ fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--color-text-muted)", fontWeight: 600 }}>
+              {item.label}
+            </span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-main)", marginTop: 4, lineHeight: 1 }}>
+              {item.value}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* Bottom: Subdued Financial Targets */}
@@ -1666,134 +1557,61 @@ function Summary({
   const greenPct = tot === 0 ? 0 : (t.ot / safeTot) * 100;
   const yellowPct = tot === 0 ? 0 : (t.ar / safeTot) * 100;
   const redPct = tot === 0 ? 0 : (t.of / safeTot) * 100;
-  const totalStatus = tot;
+  const summaryStats = [
+    { label: "Priorities", value: priorities.length, dot: null, status: null as string | null },
+    { label: "Initiatives", value: t.i, dot: null, status: null as string | null },
+    { label: "Capabilities", value: t.c, dot: null, status: null as string | null },
+    { label: "On Track", value: globalOnTrack, dot: "var(--color-status-success)", status: "on-track" as string | null },
+    { label: "At Risk", value: globalAtRisk, dot: "var(--color-status-warning)", status: "at-risk" as string | null },
+    { label: "Off Track", value: globalOffTrack, dot: "var(--color-status-danger)", status: "off-track" as string | null },
+  ];
   return (
-    <div className="summary-banner ld-card">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-        {/* Left Column: Context */}
-        <div style={{ flex: "0 0 200px" }}>
-          <h2 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--color-text-main)" }}>
-            Portfolio Health
-          </h2>
-          <p style={{ margin: 0, fontSize: "12px", color: "var(--color-text-muted)" }}>
-            {seg === "All" ? "All Segments" : seg} · {fy === "All" ? "All Years" : fy} · {market}
-          </p>
-        </div>
-        {/* Center Column: Status Dots & Progress Bar */}
-        <div style={{ flex: "1 1 auto", padding: "0 40px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "600px", margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-around" }}>
-            <div
-              onClick={() => onStatusFilter(statusFilter === "on-track" ? null : "on-track")}
-              style={{
-                textAlign: "center",
-                cursor: "pointer",
-                padding: "8px",
-                borderRadius: "8px",
-                backgroundColor: statusFilter === "on-track" ? "var(--color-bg-app)" : "transparent",
-                opacity: statusFilter && statusFilter !== "on-track" ? 0.4 : 1,
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--color-text-main)" }}>
-                <span style={{ color: "var(--color-status-success)", marginRight: "8px" }}>●</span>
-                <span style={{ color: "var(--color-status-success)" }}>{globalOnTrack}</span>
-              </div>
-              <div style={{ fontSize: "11px", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginTop: "4px" }}>
-                On Track
-              </div>
-            </div>
-            <div
-              onClick={() => onStatusFilter(statusFilter === "at-risk" ? null : "at-risk")}
-              style={{
-                textAlign: "center",
-                cursor: "pointer",
-                padding: "8px",
-                borderRadius: "8px",
-                backgroundColor: statusFilter === "at-risk" ? "var(--color-bg-app)" : "transparent",
-                opacity: statusFilter && statusFilter !== "at-risk" ? 0.4 : 1,
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--color-text-main)" }}>
-                <span style={{ color: "var(--color-status-warning)", marginRight: "8px" }}>●</span>
-                <span style={{ color: "var(--color-status-warning)" }}>{globalAtRisk}</span>
-              </div>
-              <div style={{ fontSize: "11px", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginTop: "4px" }}>
-                At Risk
-              </div>
-            </div>
-            <div
-              onClick={() => onStatusFilter(statusFilter === "off-track" ? null : "off-track")}
-              style={{
-                textAlign: "center",
-                cursor: "pointer",
-                padding: "8px",
-                borderRadius: "8px",
-                backgroundColor: statusFilter === "off-track" ? "var(--color-bg-app)" : "transparent",
-                opacity: statusFilter && statusFilter !== "off-track" ? 0.4 : 1,
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div style={{ fontSize: "32px", fontWeight: 700, color: "var(--color-text-main)" }}>
-                <span style={{ color: "var(--color-status-danger)", marginRight: "8px" }}>●</span>
-                <span style={{ color: "var(--color-status-danger)" }}>{globalOffTrack}</span>
-              </div>
-              <div style={{ fontSize: "11px", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginTop: "4px" }}>
-                Off Track
-              </div>
-            </div>
-          </div>
-          {/* Progress Bar (No Text Below It) */}
+    <div className="summary-banner ld-card" style={{ padding: 0, overflow: "hidden" }}>
+      {/* Header row */}
+      <div style={{ padding: "14px 24px 12px", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+        <h2 style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-muted)" }}>
+          Portfolio Health
+        </h2>
+        <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-tertiary)" }}>
+          {seg === "All" ? "All Segments" : seg} · {fy === "All" ? "All Years" : fy} · {market}
+        </p>
+      </div>
+      {/* Stat row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)" }}>
+        {summaryStats.map((stat, i) => (
           <div
+            key={stat.label}
+            onClick={() => stat.status && onStatusFilter(statusFilter === stat.status ? null : stat.status)}
             style={{
-              width: "100%",
-              height: "16px",
-              borderRadius: "8px",
-              overflow: "hidden",
-              backgroundColor: "var(--color-bg-app)",
-              display: "flex",
+              padding: "20px 0",
+              textAlign: "center",
+              borderRight: i < 5 ? "1px solid var(--color-border)" : "none",
+              borderLeft: i === 3 ? "1px solid var(--color-border-subtle)" : "none",
+              cursor: stat.status ? "pointer" : "default",
+              opacity: statusFilter && statusFilter !== stat.status ? 0.4 : 1,
+              transition: "opacity 0.15s, background 0.15s",
+              background: stat.status && statusFilter === stat.status ? "var(--color-bg-app)" : "transparent",
             }}
           >
-            {totalStatus === 0 ? (
-              <div style={{ width: "100%", backgroundColor: "var(--color-border)" }} title="No data" />
-            ) : (
-              <>
-                <div style={{ width: `${greenPct}%`, backgroundColor: "var(--color-status-success)" }} />
-                <div style={{ width: `${yellowPct}%`, backgroundColor: "var(--color-status-warning)" }} />
-                <div style={{ width: `${redPct}%`, backgroundColor: "var(--color-status-danger)" }} />
-              </>
-            )}
-          </div>
-        </div>
-        {/* Right Column: Entity Counts */}
-        <div
-          style={{
-            flex: "0 0 280px",
-            display: "flex",
-            justifyContent: "space-between",
-            borderLeft: "1px solid var(--color-border)",
-            paddingLeft: "32px",
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--color-text-main)" }}>{priorities.length}</div>
-            <div style={{ fontSize: "11px", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginTop: "4px" }}>
-              Priorities
+            <div style={{ fontSize: 10, fontWeight: 600, color: stat.dot ?? "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+              {stat.dot && <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: stat.dot, flexShrink: 0 }} />}
+              {stat.label}
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: "var(--color-text-main)", lineHeight: 1 }}>
+              {stat.value}
             </div>
           </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--color-text-main)" }}>{t.i}</div>
-            <div style={{ fontSize: "11px", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginTop: "4px" }}>
-              Initiatives
-            </div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: "var(--color-text-main)" }}>{t.c}</div>
-            <div style={{ fontSize: "11px", color: "var(--color-text-muted)", fontWeight: 600, textTransform: "uppercase", marginTop: "4px" }}>
-              Capabilities
-            </div>
-          </div>
-        </div>
+        ))}
+      </div>
+      {/* Progress bar */}
+      <div style={{ height: 4, display: "flex", backgroundColor: "var(--color-border-light)" }}>
+        {tot > 0 && (
+          <>
+            <div style={{ width: `${greenPct}%`, background: "var(--color-status-success)", transition: "width 0.3s" }} />
+            <div style={{ width: `${yellowPct}%`, background: "var(--color-status-warning)", transition: "width 0.3s" }} />
+            <div style={{ width: `${redPct}%`, background: "var(--color-status-danger)", transition: "width 0.3s" }} />
+          </>
+        )}
       </div>
     </div>
   );
@@ -2409,8 +2227,9 @@ function App() {
                 cursor: "pointer",
               }}
             >
-              <span style={{ fontWeight: 600, color: "var(--color-status-warning-text)", fontSize: "14px" }}>
-                ⚠ {attentionCount} items need attention
+              <span style={{ fontWeight: 600, color: "var(--color-status-warning-text)", fontSize: "14px", display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "var(--color-status-warning)", flexShrink: 0 }} />
+                {attentionCount} items need attention
               </span>
               <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-status-warning-text)" }}>
                 View Details {isBannerExpanded ? "▲" : "▼"}

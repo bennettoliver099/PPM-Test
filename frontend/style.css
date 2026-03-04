@@ -107,18 +107,16 @@
   justify-content: center;
 }
 
-/* Summary card (Portfolio Health) – standard card, no dark header */
+/* Summary card (Portfolio Health) – compact stat row layout */
 .summary-banner {
   background-color: var(--color-bg-card);
   color: var(--color-text-main);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  padding: 16px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
+  overflow: hidden;
+  display: block;
+  padding: 0;
 }
 .summary-banner .summary-banner__muted {
   color: var(--color-text-muted);
