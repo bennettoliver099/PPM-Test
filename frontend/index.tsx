@@ -117,29 +117,67 @@ function StatusDot({ color, size = 6 }: { color: string; size?: number }) {
   );
 }
 
+type EntityType = 'goal' | 'initiative' | 'project' | 'capability' | 'epic';
+
+const ENTITY_COLORS: Record<EntityType, { color: string; bg: string }> = {
+  goal:        { color: C.blue,          bg: C.blueSoft },
+  initiative:  { color: C.purpleDark,    bg: C.purpleSoft },
+  project:     { color: C.textSecondary, bg: C.borderLight },
+  capability:  { color: C.greenDark,     bg: C.greenSoft },
+  epic:        { color: C.amberDark,     bg: C.amberSoft },
+};
+
+function TypeBadge({ type }: { type: EntityType }) {
+  const ec = ENTITY_COLORS[type];
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 700, fontFamily: C.font,
+      color: ec.color, backgroundColor: ec.bg,
+      padding: '2px 8px', borderRadius: C.radiusChip,
+      textTransform: 'uppercase' as const, letterSpacing: '0.1em',
+      whiteSpace: 'nowrap' as const, flexShrink: 0, lineHeight: '16px',
+      display: 'inline-flex', alignItems: 'center',
+    }}>
+      {type}
+    </span>
+  );
+}
+
 // --- Constants ---
-const PALETTE: readonly string[] = [
-  "#90D6F9", "#AACF9A", "#ACC8FB", "#A3DBE9", "#FFEDBC", "#D0C2D8",
-  "#FED1B3", "#F4BDD3", "#F9BDB8", "#FFFBB3",
-];
+const FIELD_COLORS: Record<string, { bg: string; fg: string }> = {
+  blue:   { bg: C.blueSoft,    fg: C.blue },
+  cyan:   { bg: '#D0F0FD',     fg: '#0B76B7' },
+  teal:   { bg: '#c2f5e9',     fg: '#06846a' },
+  green:  { bg: C.greenSoft,   fg: C.greenDark },
+  yellow: { bg: C.amberSoft,   fg: C.amberDark },
+  orange: { bg: '#fee2d5',     fg: '#d14d00' },
+  red:    { bg: C.redSoft,     fg: C.redDark },
+  purple: { bg: C.purpleSoft,  fg: C.purpleDark },
+  gray:   { bg: '#f3f4f6',     fg: C.textSecondary },
+};
+const FIELD_COLOR_KEYS = Object.keys(FIELD_COLORS);
+
+function getFieldColor(s: string): { bg: string; fg: string } {
+  return FIELD_COLORS[FIELD_COLOR_KEYS[Math.abs(hashToIndex(s, FIELD_COLOR_KEYS.length))]];
+}
 
 const STATUS: Record<InitiativeStatus, StatusConfig> = {
   "on-track": {
-    color: "var(--color-status-success-text)",
-    bg: "var(--color-status-success-bg)",
-    dot: "var(--color-status-success)",
+    color: C.greenDark,
+    bg: C.greenSoft,
+    dot: C.green,
     label: "On Track",
   },
   "at-risk": {
-    color: "var(--color-status-warning-text)",
-    bg: "var(--color-status-warning-bg)",
-    dot: "var(--color-status-warning)",
+    color: C.amberDark,
+    bg: C.amberSoft,
+    dot: C.amber,
     label: "At Risk",
   },
   "off-track": {
-    color: "var(--color-status-danger-text)",
-    bg: "var(--color-status-danger-bg)",
-    dot: "var(--color-status-danger)",
+    color: C.redDark,
+    bg: C.redSoft,
+    dot: C.red,
     label: "Off Track",
   },
 };
@@ -200,13 +238,6 @@ function downloadInitiativesCSV(initiatives: Initiative[]): void {
   URL.revokeObjectURL(url);
 }
 
-function getPriorityColor(priorityName: string): string {
-  return PALETTE[hashToIndex(priorityName, PALETTE.length)];
-}
-
-function getGPAColor(gpa: string): string {
-  return PALETTE[hashToIndex(gpa, PALETTE.length)];
-}
 
 /** Format GMV for display (B/M or raw). */
 const formatGMV = (val: number): string =>
@@ -265,7 +296,7 @@ function Dot({ status, size = 8 }: DotProps) {
         width: size,
         height: size,
         borderRadius: "50%",
-        background: STATUS[status]?.dot ?? "var(--color-border)",
+        background: STATUS[status]?.dot ?? C.border,
         flexShrink: 0,
       }}
     />
@@ -299,21 +330,21 @@ function Bar({
       style={{
         display: "flex",
         height: "4px",
-        borderRadius: "4px",
+        borderRadius: C.radiusChip,
         overflow: "hidden",
-        backgroundColor: "var(--color-border-light)",
+        backgroundColor: C.borderLight,
       }}
     >
       {totalStatus === 0 ? (
         <div
-          style={{ width: "100%", backgroundColor: "var(--color-border)" }}
+          style={{ width: "100%", backgroundColor: C.border }}
           title="No status data available"
         />
       ) : (
         <>
-          <div style={{ width: `${greenPct}%`, backgroundColor: "var(--color-status-success)" }} />
-          <div style={{ width: `${yellowPct}%`, backgroundColor: "var(--color-status-warning)" }} />
-          <div style={{ width: `${redPct}%`, backgroundColor: "var(--color-status-danger)" }} />
+          <div style={{ width: `${greenPct}%`, backgroundColor: C.green }} />
+          <div style={{ width: `${yellowPct}%`, backgroundColor: C.amber }} />
+          <div style={{ width: `${redPct}%`, backgroundColor: C.red }} />
         </>
       )}
     </div>
@@ -396,16 +427,16 @@ interface StatRowData {
   totalProjects?: number;
 }
 const statRowHeaderLabelStyleSmall: React.CSSProperties = {
-  fontSize: 9,
+  fontSize: 10,
   fontWeight: 600,
-  color: "var(--color-text-muted)",
+  color: C.textSecondary,
   textTransform: "uppercase",
   letterSpacing: "0.03em",
 };
 const statRowHeaderLabelStyle: React.CSSProperties = {
   fontSize: 10,
   fontWeight: 600,
-  color: "var(--color-text-muted)",
+  color: C.textSecondary,
   textTransform: "uppercase",
   letterSpacing: "0.5px",
 };
@@ -425,13 +456,13 @@ function StatRow({
     ? "repeat(4, minmax(50px, 1fr)) repeat(3, minmax(40px, 1fr))"
     : "minmax(75px, 1.5fr) minmax(85px, 1.5fr) 1fr 1fr 1fr";
   const statBoxBase = {
-    borderRight: "1px solid var(--color-border-light)",
-    padding: useExtendedLayout ? "8px 10px" : "10px 18px",
+    borderRight: `1px solid ${C.borderLight}`,
+    padding: useExtendedLayout ? "8px 12px" : "16px 20px",
     minWidth: 0,
   };
   const statBoxLast = useExtendedLayout
-    ? { padding: "8px 10px", minWidth: 0 }
-    : { padding: "10px 18px", minWidth: 0 };
+    ? { padding: "8px 12px", minWidth: 0 }
+    : { padding: "16px 20px", minWidth: 0 };
   const dotCol = {
     cursor: onStat ? "pointer" : "default",
     display: "flex",
@@ -446,33 +477,33 @@ function StatRow({
         style={{
           display: "grid",
           gridTemplateColumns: gridCols,
-          borderBottom: "1px solid var(--color-border-light)",
-          background: "var(--color-bg-card)",
+          borderBottom: `1px solid ${C.borderLight}`,
+          background: C.bgPanel,
         }}
       >
         <div className="stat-box" style={statBoxBase}>
           <div className="stat-label" style={headerStyle}>Groups</div>
-          <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.totalGroups}</div>
+          <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{data.totalGroups}</div>
         </div>
         <div className="stat-box" style={statBoxBase}>
           <div className="stat-label" style={headerStyle}>Initiatives</div>
-          <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.count ?? 0}</div>
+          <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{data.count ?? 0}</div>
         </div>
         <div className="stat-box" style={statBoxBase}>
           <div className="stat-label" style={headerStyle}>Projects</div>
-          <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.totalProjects}</div>
+          <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{data.totalProjects}</div>
         </div>
         <div className="stat-box" style={statBoxBase}>
           <div className="stat-label" style={headerStyle}>Capabilities</div>
-          <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.capabilitiesTotal ?? 0}</div>
+          <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{data.capabilitiesTotal ?? 0}</div>
         </div>
         <div onClick={() => onStat?.("on-track")} className="stat-box" style={dotCol}>
           <StatusDot color={C.green} size={7} />
-          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{onTrackCount}</span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{onTrackCount}</span>
         </div>
         <div onClick={() => onStat?.("at-risk")} className="stat-box" style={dotCol}>
           <StatusDot color={C.amber} size={7} />
-          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{atRiskCount}</span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{atRiskCount}</span>
         </div>
         <div
           onClick={() => onStat?.("off-track")}
@@ -480,7 +511,7 @@ function StatRow({
           style={{ ...statBoxLast, ...dotCol, borderRight: "none" }}
         >
           <StatusDot color={C.red} size={7} />
-          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{offTrackCount}</span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{offTrackCount}</span>
         </div>
       </div>
     );
@@ -491,29 +522,29 @@ function StatRow({
       style={{
         display: "grid",
         gridTemplateColumns: gridCols,
-        borderBottom: "1px solid var(--color-border-light)",
-        background: "var(--color-bg-card)",
+        borderBottom: `1px solid ${C.borderLight}`,
+        background: C.bgPanel,
       }}
     >
       <div className="stat-box" style={statBoxBase}>
         <div className="stat-label" style={headerStyle}>Initiatives</div>
-        <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.count ?? 0}</div>
+        <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{data.count ?? 0}</div>
       </div>
       <div className="stat-box" style={statBoxBase}>
         <div className="stat-label" style={headerStyle}>Capabilities</div>
-        <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{data.capabilitiesTotal ?? 0}</div>
+        <div className="stat-value-row" style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{data.capabilitiesTotal ?? 0}</div>
       </div>
       <div onClick={() => onStat?.("on-track")} className="stat-box" style={dotCol}>
         <StatusDot color={C.green} size={7} />
-        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{onTrackCount}</span>
+        <span style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{onTrackCount}</span>
       </div>
       <div onClick={() => onStat?.("at-risk")} className="stat-box" style={dotCol}>
         <StatusDot color={C.amber} size={7} />
-        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{atRiskCount}</span>
+        <span style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{atRiskCount}</span>
       </div>
       <div onClick={() => onStat?.("off-track")} className="stat-box" style={statBoxLast}>
         <StatusDot color={C.red} size={7} />
-        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text-main)" }}>{offTrackCount}</span>
+        <span style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary }}>{offTrackCount}</span>
       </div>
     </div>
   );
@@ -569,30 +600,15 @@ function SideSheet({
     const s = (i.trueStatus ?? "").toLowerCase();
     return s === "off-track" || s === "at-risk";
   });
-  let headerBg = "#338a17";
-  let overallStatus = "On Track";
-  let statusColor = "var(--color-status-success-text)";
-  if (offTrackCount > 0) {
-    headerBg = "#ba1e45";
-    overallStatus = "Off Track";
-    statusColor = "var(--color-status-danger-text)";
-  } else if (atRiskCount > 0) {
-    headerBg = "#b87503";
-    overallStatus = "At Risk";
-    statusColor = "var(--color-status-warning-text)";
-  }
+  const overallStatus: InitiativeStatus = offTrackCount > 0 ? "off-track" : atRiskCount > 0 ? "at-risk" : "on-track";
+  const headerBg = STATUS[overallStatus].dot;
+  const headerBgLabel = STATUS[overallStatus].label;
   const cleanTitle = priority.name.replace(/^Enterprise Priority:\s*/i, "");
 
   // Detail view: single initiative (Initiative -> Projects -> Capabilities)
   if (initiative) {
     const isMissing = initiative.financeProjection === "MISSING" || !initiative.financeProjection.trim();
-    let detailHeaderBg = "#338a17";
-    const detailStatus = (initiative.trueStatus ?? "").toLowerCase();
-    if (detailStatus === "off-track" || detailStatus === "red") {
-      detailHeaderBg = "#ba1e45";
-    } else if (detailStatus === "at-risk" || detailStatus === "yellow") {
-      detailHeaderBg = "#b87503";
-    }
+    const detailHeaderBg = STATUS[initiative.trueStatus]?.dot ?? C.green;
     return (
       <div
         className="side-sheet-overlay side-sheet-open"
@@ -615,8 +631,11 @@ function SideSheet({
               >
                 <IconArrowLeft size={12} color={C.textSecondary} /> Back to Priority
               </button>
-              <div className="side-sheet-header__title">{initiative.name}</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                <TypeBadge type="initiative" />
+                <div className="side-sheet-header__title" style={{ margin: 0 }}>{initiative.name}</div>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 5,
                   fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: C.radiusChip,
@@ -651,37 +670,12 @@ function SideSheet({
               <h2 className="context-title">{contextTitle}</h2>
             </div>
           )}
-          <div className={`side-sheet-finance-banner ${isMissing ? "side-sheet-finance-banner--missing" : ""}`}>
-            <svg className="side-sheet-finance-banner__icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden style={{ width: 14, height: 14, flexShrink: 0 }}>
-              <path d="M8 1.333A6.667 6.667 0 1 0 8 14.667 6.667 6.667 0 0 0 8 1.333zm.667 10H7.333V7.333h1.334V11.333zm0-5.333H7.333V4.667h1.334V6z"/>
-            </svg>
-            <span>Target GMV/MRR: {initiative.financeProjection?.trim() || "MISSING"}</span>
-          </div>
           <div className="side-sheet-body">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "16px",
-                padding: "16px 24px",
-                borderBottom: "1px solid var(--color-border)",
-                marginBottom: 8,
-              }}
-            >
-              {[
-                { label: "Product Lead", value: initiative.productLead?.trim() || "Unassigned", color: "var(--color-text-main)" as string | undefined },
-                { label: "Status", value: initiative.trueStatus?.replace(/-/g, " ") || "Unknown", color: detailHeaderBg },
-                { label: "Risks", value: initiative.risks?.trim() || "None", color: initiative.risks?.trim() ? "var(--color-status-danger-text)" : "var(--color-text-muted)" },
-              ].map((item) => (
-                <div key={item.label} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 10, textTransform: "uppercase", color: "var(--color-text-muted)", fontWeight: 600, letterSpacing: "0.06em" }}>
-                    {item.label}
-                  </span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: item.color ?? "var(--color-text-main)", textTransform: item.label === "Status" ? ("capitalize" as const) : ("none" as const) }}>
-                    {item.value}
-                  </span>
-                </div>
-              ))}
+            <div style={{ padding: "12px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", flexWrap: "wrap", gap: 16, fontSize: 12, color: C.textSecondary, alignItems: "center" }}>
+              <span><span style={{ fontWeight: 600, color: C.textTertiary, marginRight: 4 }}>Lead</span>{initiative.productLead?.trim() || "Unassigned"}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ fontWeight: 600, color: C.textTertiary, marginRight: 4 }}>Status</span><Badge status={initiative.trueStatus} /></span>
+              <span><span style={{ fontWeight: 600, color: C.textTertiary, marginRight: 4 }}>Risk</span>{initiative.risks?.trim() || "None"}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ fontWeight: 600, color: C.textTertiary, marginRight: 4 }}>Finance</span>{initiative.financeProjection?.trim() && initiative.financeProjection.trim() !== "MISSING" ? initiative.financeProjection.trim() : <span style={{ color: C.amberDark, display: "inline-flex", alignItems: "center", gap: 4 }}><IconAlertTriangle size={12} color={C.amberDark} />Not set</span>}</span>
             </div>
             <div className="hierarchy-container" style={{ display: "flex", flexDirection: "column", gap: "24px", marginTop: "24px" }}>
               {initiative.projects?.map((project) => (
@@ -689,9 +683,9 @@ function SideSheet({
                   key={project.id}
                   className="project-card"
                   style={{
-                    backgroundColor: "var(--color-bg-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: "8px",
+                    backgroundColor: C.bgPanel,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: C.radiusCard,
                     padding: "16px",
                   }}
                 >
@@ -703,21 +697,11 @@ function SideSheet({
                       gap: "12px",
                       marginBottom: "16px",
                       paddingBottom: "12px",
-                      borderBottom: "1px solid var(--color-border-subtle)",
+                      borderBottom: `1px solid ${C.borderLight}`,
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        color: "var(--color-text-muted)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      PROJECT
-                    </span>
-                    <h3 style={{ margin: 0, fontSize: "16px", color: "var(--color-text-main)", fontWeight: 600 }}>
+                    <TypeBadge type="project" />
+                    <h3 style={{ margin: 0, fontSize: 15, color: C.textPrimary, fontWeight: 600 }}>
                       {project.name}
                     </h3>
                     <span className={`ld-badge badge-${project.status?.toLowerCase().replace(/\s+/g, "-") || "neutral"}`}>
@@ -731,8 +715,7 @@ function SideSheet({
                       display: "flex",
                       flexDirection: "column",
                       gap: "16px",
-                      paddingLeft: "12px",
-                      borderLeft: "3px solid var(--color-bg-app)",
+                      paddingLeft: 40,
                     }}
                   >
                     {project.capabilities && project.capabilities.length > 0 ? (
@@ -740,13 +723,14 @@ function SideSheet({
                         <div
                           key={cap.id}
                           className="capability-card"
-                          style={{ backgroundColor: "var(--color-bg-app)", padding: "12px", borderRadius: "6px" }}
+                          style={{ backgroundColor: C.bgPanel, padding: "12px", borderRadius: C.radiusCard }}
                         >
                           {/* Capability Header & Dual RAG */}
                           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
-                            <h4 style={{ margin: 0, fontSize: "14px", color: "var(--color-text-main)", fontWeight: 600 }}>
-                              {cap.name}
-                            </h4>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <TypeBadge type="capability" />
+                              <span style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary }}>{cap.name}</span>
+                            </div>
                             <span className={`ld-badge badge-${cap.status?.toLowerCase().replace(/\s+/g, "-") || "neutral"}`}>
                               {cap.status || "Unassigned"}
                             </span>
@@ -770,7 +754,7 @@ function SideSheet({
                               style={{
                                 fontSize: "12px",
                                 fontWeight: 600,
-                                color: "var(--color-brand-primary)",
+                                color: C.blue,
                                 cursor: "pointer",
                                 display: "flex",
                                 alignItems: "center",
@@ -787,11 +771,11 @@ function SideSheet({
                               className="status-notes-box"
                               style={{
                                 marginTop: "8px",
-                                padding: "10px",
-                                backgroundColor: "var(--color-bg-card)",
-                                borderLeft: `3px solid var(--color-status-${cap.status?.toLowerCase() === "red" ? "danger" : cap.status?.toLowerCase() === "yellow" ? "warning" : "success"})`,
+                                padding: "12px",
+                                backgroundColor: C.bgPanel,
+                                borderLeft: `3px solid ${cap.status?.toLowerCase() === "red" ? C.red : cap.status?.toLowerCase() === "yellow" ? C.amber : C.green}`,
                                 fontSize: "12px",
-                                color: "var(--color-text-muted)",
+                                color: C.textSecondary,
                               }}
                             >
                               <strong>Status Notes:</strong> {cap.statusNotes}
@@ -803,14 +787,13 @@ function SideSheet({
                               className="epic-list-container"
                               style={{
                                 marginTop: "12px",
-                                paddingLeft: "16px",
-                                borderLeft: "2px dashed var(--color-border)",
+                                paddingLeft: 40,
                               }}
                             >
-                              <h5 style={{ fontSize: "11px", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "8px" }}>
+                              <h5 style={{ fontSize: "11px", textTransform: "uppercase", color: C.textSecondary, marginBottom: "8px" }}>
                                 Epics ({cap.epics.length})
                               </h5>
-                              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                 {cap.epics.map((epic) => (
                                   <div
                                     key={epic.id}
@@ -818,17 +801,18 @@ function SideSheet({
                                     style={{
                                       display: "flex",
                                       alignItems: "center",
-                                      gap: "8px",
+                                      gap: 8,
                                       fontSize: "13px",
-                                      backgroundColor: "var(--color-bg-card)",
-                                      padding: "6px 12px",
-                                      borderRadius: "4px",
-                                      border: "1px solid var(--color-border-subtle)",
+                                      backgroundColor: C.bgPanel,
+                                      padding: "8px 12px",
+                                      borderRadius: C.radiusChip,
+                                      border: `1px solid ${C.borderLight}`,
                                     }}
                                   >
                                     <StatusDot color={epic.status?.toLowerCase() === "red" ? C.red : epic.status?.toLowerCase() === "yellow" ? C.amber : C.green} size={7} />
-                                    <span style={{ color: "var(--color-text-main)", fontWeight: 500 }}>{epic.name}</span>
-                                    <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--color-text-muted)" }}>{epic.status}</span>
+                                    <TypeBadge type="epic" />
+                                    <span style={{ color: C.textPrimary, fontWeight: 500 }}>{epic.name}</span>
+                                    <span style={{ marginLeft: "auto", fontSize: "11px", color: C.textSecondary }}>{epic.status}</span>
                                   </div>
                                 ))}
                               </div>
@@ -872,7 +856,7 @@ function SideSheet({
                         </div>
                       ))
                     ) : (
-                      <div style={{ fontSize: "12px", color: "var(--color-text-muted)", fontStyle: "italic" }}>
+                      <div style={{ fontSize: "12px", color: C.textSecondary, fontStyle: "italic" }}>
                         No capabilities linked to this project.
                       </div>
                     )}
@@ -889,8 +873,8 @@ function SideSheet({
                 <h3
                   style={{
                     margin: "0 0 12px 0",
-                    fontSize: "14px",
-                    color: "var(--color-text-muted)",
+                    fontSize: 13,
+                    color: C.textSecondary,
                     textTransform: "uppercase",
                     letterSpacing: "0.5px",
                     fontWeight: 700,
@@ -904,20 +888,20 @@ function SideSheet({
                     display: "flex",
                     flexDirection: "column",
                     gap: "16px",
-                    paddingLeft: "12px",
-                    borderLeft: "3px solid var(--color-bg-app)",
+                    paddingLeft: 40,
                   }}
                 >
                   {initiative.orphanedCapabilities.map((cap) => (
                     <div
                       key={cap.id}
                       className="capability-card"
-                      style={{ backgroundColor: "var(--color-bg-app)", padding: "12px", borderRadius: "6px" }}
+                      style={{ backgroundColor: C.bgPanel, padding: "12px", borderRadius: C.radiusCard }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
-                        <h4 style={{ margin: 0, fontSize: "14px", color: "var(--color-text-main)", fontWeight: 600 }}>
-                          {cap.name}
-                        </h4>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <TypeBadge type="capability" />
+                          <span style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary }}>{cap.name}</span>
+                        </div>
                         <span className={`ld-badge badge-${cap.status?.toLowerCase().replace(/\s+/g, "-") || "neutral"}`}>
                           {cap.status || "Unassigned"}
                         </span>
@@ -950,11 +934,11 @@ function SideSheet({
                           className="status-notes-box"
                           style={{
                             marginTop: "8px",
-                            padding: "10px",
-                            backgroundColor: "var(--color-bg-card)",
-                            borderLeft: `3px solid var(--color-status-${cap.status?.toLowerCase() === "red" ? "danger" : cap.status?.toLowerCase() === "yellow" ? "warning" : "success"})`,
+                            padding: "12px",
+                            backgroundColor: C.bgPanel,
+                            borderLeft: `3px solid ${cap.status?.toLowerCase() === "red" ? C.red : cap.status?.toLowerCase() === "yellow" ? C.amber : C.green}`,
                             fontSize: "12px",
-                            color: "var(--color-text-muted)",
+                            color: C.textSecondary,
                           }}
                         >
                           <strong>Status Notes:</strong> {cap.statusNotes}
@@ -965,14 +949,13 @@ function SideSheet({
                           className="epic-list-container"
                           style={{
                             marginTop: "12px",
-                            paddingLeft: "16px",
-                            borderLeft: "2px dashed var(--color-border)",
+                            paddingLeft: 40,
                           }}
                         >
-                          <h5 style={{ fontSize: "11px", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "8px" }}>
+                          <h5 style={{ fontSize: "11px", textTransform: "uppercase", color: C.textSecondary, marginBottom: "8px" }}>
                             Epics ({cap.epics.length})
                           </h5>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                             {cap.epics.map((epic) => (
                               <div
                                 key={epic.id}
@@ -980,17 +963,18 @@ function SideSheet({
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  gap: "8px",
+                                  gap: 8,
                                   fontSize: "13px",
-                                  backgroundColor: "var(--color-bg-card)",
-                                  padding: "6px 12px",
-                                  borderRadius: "4px",
-                                  border: "1px solid var(--color-border-subtle)",
+                                  backgroundColor: C.bgPanel,
+                                  padding: "8px 12px",
+                                  borderRadius: C.radiusChip,
+                                  border: `1px solid ${C.borderLight}`,
                                 }}
                               >
                                 <StatusDot color={epic.status?.toLowerCase() === "red" ? C.red : epic.status?.toLowerCase() === "yellow" ? C.amber : C.green} size={7} />
-                                <span style={{ color: "var(--color-text-main)", fontWeight: 500 }}>{epic.name}</span>
-                                <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--color-text-muted)" }}>{epic.status}</span>
+                                <TypeBadge type="epic" />
+                                <span style={{ color: C.textPrimary, fontWeight: 500 }}>{epic.name}</span>
+                                <span style={{ marginLeft: "auto", fontSize: "11px", color: C.textSecondary }}>{epic.status}</span>
                               </div>
                             ))}
                           </div>
@@ -1066,7 +1050,7 @@ function SideSheet({
                 textTransform: "uppercase", letterSpacing: "0.08em",
               }}>
                 <StatusDot color={headerBg} size={5} />
-                {overallStatus}
+                {headerBgLabel}
               </span>
             </div>
             <h2 style={{ margin: "0 0 2px 0", fontSize: 20, fontWeight: 700, color: C.textPrimary, lineHeight: 1.2, paddingRight: 48, letterSpacing: "-0.01em" }}>
@@ -1080,67 +1064,59 @@ function SideSheet({
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
-            borderBottom: "1px solid var(--color-border)",
+            borderBottom: `1px solid ${C.border}`,
           }}>
             <div
               onClick={() => setLocalFilter("all")}
               style={{
-                padding: "18px 20px",
+                padding: "16px 20px",
                 cursor: "pointer",
-                borderRight: "1px solid var(--color-border)",
-                background: localFilter === "all" ? "var(--color-bg-app)" : "var(--color-bg-card)",
+                borderRight: `1px solid ${C.border}`,
+                background: localFilter === "all" ? C.bgPage : C.bgPanel,
                 transition: "background 0.12s",
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.textTertiary, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
                 Initiatives
               </div>
-              <div style={{ fontSize: 26, fontWeight: 700, color: "var(--color-text-main)", lineHeight: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, lineHeight: 1 }}>
                 {inits.length}
               </div>
-              <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: C.textTertiary, marginTop: 4 }}>
                 {localFilter === "all" ? "Showing all" : "Click to show all"}
               </div>
             </div>
             <div
               onClick={() => setLocalFilter("attention")}
               style={{
-                padding: "18px 20px",
+                padding: "16px 20px",
                 cursor: "pointer",
-                borderRight: "1px solid var(--color-border)",
-                background: localFilter === "attention" ? "var(--color-bg-app)" : "var(--color-bg-card)",
+                borderRight: `1px solid ${C.border}`,
+                background: localFilter === "attention" ? C.bgPage : C.bgPanel,
                 transition: "background 0.12s",
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.textTertiary, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
                 Needs Attention
               </div>
-              <div style={{ fontSize: 26, fontWeight: 700, color: offTrackCount + atRiskCount > 0 ? "var(--color-status-danger-text)" : "var(--color-text-main)", lineHeight: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: offTrackCount + atRiskCount > 0 ? C.redDark : C.textPrimary, lineHeight: 1 }}>
                 {offTrackCount + atRiskCount}
               </div>
-              <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: C.textTertiary, marginTop: 4 }}>
                 At risk or off track
               </div>
             </div>
             <div style={{
-              padding: "18px 20px",
-              background: "var(--color-bg-card)",
+              padding: "16px 20px",
+              background: C.bgPanel,
             }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.textTertiary, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
                 Overall Status
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, lineHeight: 1, marginBottom: 4 }}>
-                <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  padding: "3px 10px", borderRadius: C.radiusChip, fontSize: 12,
-                  background: headerBg + "18", color: headerBg,
-                  border: `1px solid ${headerBg}40`, fontWeight: 600,
-                }}>
-                  <StatusDot color={headerBg} size={5} />
-                  {overallStatus}
-                </span>
+              <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1, marginBottom: 4 }}>
+                <Badge status={overallStatus} />
               </div>
-              <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 8 }}>
+              <div style={{ fontSize: 11, color: C.textTertiary, marginTop: 8 }}>
                 Portfolio health
               </div>
             </div>
@@ -1159,8 +1135,11 @@ function SideSheet({
                   <div style={{ minWidth: 0, flex: 1 }}>
                     {/* Top row: name + status badge */}
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                      <div className="ld-body-s" style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-main)", lineHeight: 1.4 }}>{init.name}</div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                        <TypeBadge type="initiative" />
+                        <div className="ld-body-s" style={{ fontWeight: 600, fontSize: 13, color: C.textPrimary, lineHeight: 1.4 }}>{init.name}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                         <Badge status={init.trueStatus} />
                         {hasAiDiscrepancy && (
                           <span className="ld-badge badge-ai" title={`AI flags as ${init.aiStatus}`} style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><IconSparkle size={10} color="currentColor" /> AI</span>
@@ -1168,14 +1147,14 @@ function SideSheet({
                       </div>
                     </div>
                     {/* Bottom row: meta */}
-                    <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "var(--color-text-muted)", flexWrap: "wrap" }}>
+                    <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: C.textSecondary, flexWrap: "wrap" }}>
                       <span>{init.gpa}</span>
-                      {init.segments.length > 0 && <><span style={{ color: "var(--color-border)" }}>·</span><span>{init.segments.join(", ")}</span></>}
-                      {init.productLead?.trim() && <><span style={{ color: "var(--color-border)" }}>·</span><span>{init.productLead.trim()}</span></>}
-                      {init.rawFinance && <><span style={{ color: "var(--color-border)" }}>·</span><span style={{ fontWeight: 500, color: "var(--color-text-main)" }}>{init.rawFinance}</span></>}
+                      {init.segments.length > 0 && <><span style={{ color: C.border }}>·</span><span>{init.segments.join(", ")}</span></>}
+                      {init.productLead?.trim() && <><span style={{ color: C.border }}>·</span><span>{init.productLead.trim()}</span></>}
+                      {init.rawFinance && <><span style={{ color: C.border }}>·</span><span style={{ fontWeight: 500, color: C.textPrimary }}>{init.rawFinance}</span></>}
                     </div>
                   </div>
-                  <IconChevronRight size={14} color="var(--color-text-muted)" />
+                  <IconChevronRight size={14} color={C.textSecondary} />
                 </button>
               );
             })}
@@ -1215,7 +1194,7 @@ function PCard({
             <div className="ld-caption" style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {l}
             </div>
-            <div className="ld-heading-m" style={{ fontSize: 22, fontWeight: 700 }}>{String(v)}</div>
+            <div className="ld-heading-m" style={{ fontSize: 20, fontWeight: 700 }}>{String(v)}</div>
           </div>
         ))}
       </div>
@@ -1282,16 +1261,16 @@ function AggCard({
   const offTrackCount = initiatives.filter((i) => i.trueStatus === "off-track").length;
   const atRiskCount = initiatives.filter((i) => i.trueStatus === "at-risk").length;
   let statusText = "ALL ON TRACK";
-  let borderColor = "var(--color-status-success)";
+  let borderColor: string = C.green;
   if (offTrackCount > 0) {
     statusText = `${offTrackCount} OFF TRACK`;
-    borderColor = "var(--color-status-danger)";
+    borderColor = C.red;
   } else if (atRiskCount > 0) {
     statusText = `${atRiskCount} AT RISK`;
-    borderColor = "var(--color-status-warning)";
+    borderColor = C.amber;
   } else if (initiatives.length === 0) {
     statusText = "NO DATA";
-    borderColor = "var(--color-border)";
+    borderColor = C.border;
   }
 
   const cleanTitle = title.replace(/^Enterprise Priority:\s*/i, "");
@@ -1328,7 +1307,7 @@ function AggCard({
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        padding: "24px",
+        padding: "16px 20px",
         backgroundColor: C.bgPanel,
         borderRadius: C.radiusCard,
         border: `1px solid ${C.border}`,
@@ -1340,15 +1319,18 @@ function AggCard({
     >
       {/* Top: Clean Title + Status Badge */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 16 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, lineHeight: 1.4, minHeight: 40 }}>
-          {cleanTitle}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, minWidth: 0, flex: 1 }}>
+          <TypeBadge type="goal" />
+          <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, lineHeight: 1.4 }}>
+            {cleanTitle}
+          </div>
         </div>
         <div
           style={{
             display: "flex", alignItems: "center", gap: 5,
             fontSize: 10, fontWeight: 700, color: borderColor,
             textTransform: "uppercase", letterSpacing: "0.07em",
-            padding: "3px 8px", background: borderColor + "14",
+            padding: "2px 8px", background: borderColor + "14",
             border: `1px solid ${borderColor}35`, borderRadius: C.radiusChip,
             whiteSpace: "nowrap", flexShrink: 0,
           }}
@@ -1359,7 +1341,7 @@ function AggCard({
       </div>
 
       {/* Initiative count */}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 20 }}>
         <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, lineHeight: 1 }}>
           {initiatives.length}
         </div>
@@ -1374,8 +1356,8 @@ function AggCard({
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           width: "100%",
-          borderTop: "1px solid var(--color-border-subtle)",
-          borderBottom: "1px solid var(--color-border-subtle)",
+          borderTop: `1px solid ${C.borderLight}`,
+          borderBottom: `1px solid ${C.borderLight}`,
           marginBottom: "20px",
           padding: "10px 0",
         }}
@@ -1391,13 +1373,13 @@ function AggCard({
               display: "flex",
               flexDirection: "column",
               textAlign: "center",
-              borderLeft: i > 0 ? "1px solid var(--color-border-subtle)" : "none",
+              borderLeft: i > 0 ? `1px solid ${C.borderLight}` : "none",
             }}
           >
-            <span style={{ fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--color-text-muted)", fontWeight: 600 }}>
+            <span style={{ fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: C.textSecondary, fontWeight: 600 }}>
               {item.label}
             </span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-main)", marginTop: 4, lineHeight: 1 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, marginTop: 4, lineHeight: 1 }}>
               {item.value}
             </span>
           </div>
@@ -1409,12 +1391,12 @@ function AggCard({
         style={{
           marginTop: "auto",
           paddingTop: "16px",
-          borderTop: "1px solid var(--color-border-subtle)",
+          borderTop: `1px solid ${C.borderLight}`,
           display: "flex",
           justifyContent: "space-between",
           fontSize: "11px",
           fontWeight: 600,
-          color: "var(--color-text-muted)",
+          color: C.textSecondary,
           textTransform: "uppercase",
           letterSpacing: "0.5px",
         }}
@@ -1578,18 +1560,18 @@ function Summary({
     { label: "Priorities", value: priorities.length, dot: null, status: null as string | null },
     { label: "Initiatives", value: t.i, dot: null, status: null as string | null },
     { label: "Capabilities", value: t.c, dot: null, status: null as string | null },
-    { label: "On Track", value: globalOnTrack, dot: "var(--color-status-success)", status: "on-track" as string | null },
-    { label: "At Risk", value: globalAtRisk, dot: "var(--color-status-warning)", status: "at-risk" as string | null },
-    { label: "Off Track", value: globalOffTrack, dot: "var(--color-status-danger)", status: "off-track" as string | null },
+    { label: "On Track", value: globalOnTrack, dot: C.green, status: "on-track" as string | null },
+    { label: "At Risk", value: globalAtRisk, dot: C.amber, status: "at-risk" as string | null },
+    { label: "Off Track", value: globalOffTrack, dot: C.red, status: "off-track" as string | null },
   ];
   return (
     <div className="summary-banner ld-card" style={{ padding: 0, overflow: "hidden" }}>
       {/* Header row */}
-      <div style={{ padding: "14px 24px 12px", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-        <h2 style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--color-text-muted)" }}>
+      <div style={{ padding: "12px 24px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+        <h2 style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: C.textSecondary }}>
           Portfolio Health
         </h2>
-        <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-tertiary)" }}>
+        <p style={{ margin: 0, fontSize: 12, color: C.textTertiary }}>
           {seg === "All" ? "All Segments" : seg} · {fy === "All" ? "All Years" : fy} · {market}
         </p>
       </div>
@@ -1602,31 +1584,31 @@ function Summary({
             style={{
               padding: "20px 0",
               textAlign: "center",
-              borderRight: i < 5 ? "1px solid var(--color-border)" : "none",
-              borderLeft: i === 3 ? "1px solid var(--color-border-subtle)" : "none",
+              borderRight: i < 5 ? `1px solid ${C.border}` : "none",
+              borderLeft: i === 3 ? `1px solid ${C.borderLight}` : "none",
               cursor: stat.status ? "pointer" : "default",
               opacity: statusFilter && statusFilter !== stat.status ? 0.4 : 1,
-              transition: "opacity 0.15s, background 0.15s",
-              background: stat.status && statusFilter === stat.status ? "var(--color-bg-app)" : "transparent",
+              transition: "opacity 0.15s, background 0.12s",
+              background: stat.status && statusFilter === stat.status ? C.bgPage : "transparent",
             }}
           >
-            <div style={{ fontSize: 10, fontWeight: 600, color: stat.dot ?? "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: stat.dot ?? C.textSecondary, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
               {stat.dot && <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: stat.dot, flexShrink: 0 }} />}
               {stat.label}
             </div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: "var(--color-text-main)", lineHeight: 1 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: C.textPrimary, lineHeight: 1 }}>
               {stat.value}
             </div>
           </div>
         ))}
       </div>
       {/* Progress bar */}
-      <div style={{ height: 4, display: "flex", backgroundColor: "var(--color-border-light)" }}>
+      <div style={{ height: 4, display: "flex", backgroundColor: C.borderLight }}>
         {tot > 0 && (
           <>
-            <div style={{ width: `${greenPct}%`, background: "var(--color-status-success)", transition: "width 0.3s" }} />
-            <div style={{ width: `${yellowPct}%`, background: "var(--color-status-warning)", transition: "width 0.3s" }} />
-            <div style={{ width: `${redPct}%`, background: "var(--color-status-danger)", transition: "width 0.3s" }} />
+            <div style={{ width: `${greenPct}%`, background: C.green, transition: "width 0.2s" }} />
+            <div style={{ width: `${yellowPct}%`, background: C.amber, transition: "width 0.2s" }} />
+            <div style={{ width: `${redPct}%`, background: C.red, transition: "width 0.2s" }} />
           </>
         )}
       </div>
@@ -1674,13 +1656,13 @@ function MarketMultiSelect({
           setIsMarketDropdownOpen(!isMarketDropdownOpen);
         }}
         style={{
-          backgroundColor: "var(--color-bg-card)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "6px",
+          backgroundColor: C.bgPanel,
+          border: `1px solid ${C.border}`,
+          borderRadius: C.radiusButton,
           padding: "6px 32px 6px 12px",
           fontSize: "13px",
           fontWeight: 500,
-          color: "var(--color-text-main)",
+          color: C.textPrimary,
           cursor: "pointer",
           outline: "none",
           boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
@@ -1705,9 +1687,9 @@ function MarketMultiSelect({
               top: "calc(100% + 4px)",
               left: 0,
               right: 0,
-              backgroundColor: "var(--color-bg-card)",
-              border: "1px solid var(--color-border)",
-              borderRadius: "8px",
+              backgroundColor: C.bgPanel,
+              border: `1px solid ${C.border}`,
+              borderRadius: C.radiusCard,
               boxShadow: "0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
               zIndex: 1000,
               maxHeight: "250px",
@@ -1721,11 +1703,11 @@ function MarketMultiSelect({
               }}
               style={{
                 padding: "8px 12px",
-                borderBottom: "1px solid var(--color-border-subtle)",
+                borderBottom: `1px solid ${C.borderLight}`,
                 cursor: "pointer",
                 fontSize: "13px",
                 fontWeight: selectedMarkets.length === 0 ? 600 : 400,
-                backgroundColor: selectedMarkets.length === 0 ? "var(--color-bg-app)" : "var(--color-bg-card)",
+                backgroundColor: selectedMarkets.length === 0 ? C.bgPage : C.bgPanel,
               }}
             >
               All Markets
@@ -1801,7 +1783,7 @@ function Filters({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-end",
-          borderBottom: "1px solid var(--color-border)",
+          borderBottom: `1px solid ${C.border}`,
           marginBottom: "24px",
           paddingBottom: 0,
         }}
@@ -1823,11 +1805,11 @@ function Filters({
               style={{
                 padding: "12px 0",
                 cursor: "pointer",
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: view === v.id ? 700 : 500,
-                color: view === v.id ? "var(--color-text-main)" : "var(--color-text-muted)",
-                borderBottom: view === v.id ? "3px solid var(--color-brand-primary)" : "3px solid transparent",
-                transition: "all 0.2s ease",
+                color: view === v.id ? C.textPrimary : C.textSecondary,
+                borderBottom: view === v.id ? `3px solid ${C.blue}` : "3px solid transparent",
+                transition: "background 0.12s, box-shadow 0.15s",
                 marginBottom: "-1px",
               }}
             >
@@ -1844,12 +1826,12 @@ function Filters({
               WebkitAppearance: "none",
               background: "linear-gradient(135deg, #2d7ff9 0%, #1a6fe8 100%)",
               border: "none",
-              borderRadius: "6px",
+              borderRadius: C.radiusButton,
               padding: "6px 32px 6px 12px",
               color: "#fff",
               boxShadow: "0 1px 4px rgba(45,127,249,0.3)",
               cursor: "pointer",
-              fontFamily: "var(--font-family-base)",
+              fontFamily: C.font,
               fontSize: "13px",
               fontWeight: 600,
               backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>')`,
@@ -1888,10 +1870,10 @@ function Filters({
         <div
           style={{
             display: "flex",
-            backgroundColor: "var(--color-bg-app)",
+            backgroundColor: C.bgPage,
             padding: "4px",
-            borderRadius: "8px",
-            border: "1px solid var(--color-border-subtle)",
+            borderRadius: C.radiusCard,
+            border: `1px solid ${C.borderLight}`,
           }}
         >
           {segs.map((s) => (
@@ -1907,15 +1889,15 @@ function Filters({
                 }
               }}
               style={{
-                padding: "6px 16px",
+                padding: "8px 16px",
                 cursor: "pointer",
                 fontSize: "13px",
                 fontWeight: seg === s ? 600 : 500,
-                color: seg === s ? "var(--color-text-main)" : "var(--color-text-muted)",
-                backgroundColor: seg === s ? "#FFFFFF" : "transparent",
-                borderRadius: "6px",
+                color: seg === s ? C.textPrimary : C.textSecondary,
+                backgroundColor: seg === s ? C.bgPanel : "transparent",
+                borderRadius: C.radiusButton,
                 boxShadow: seg === s ? "0 2px 4px rgba(0,0,0,0.06)" : "none",
-                transition: "all 0.2s ease",
+                transition: "background 0.12s, box-shadow 0.15s",
               }}
             >
               {s}
@@ -1929,7 +1911,7 @@ function Filters({
               style={{
                 fontSize: "11px",
                 fontWeight: 700,
-                color: "var(--color-text-muted)",
+                color: C.textSecondary,
                 textTransform: "uppercase",
                 letterSpacing: "0.5px",
               }}
@@ -1942,13 +1924,13 @@ function Filters({
               style={{
                 appearance: "none",
                 WebkitAppearance: "none",
-                backgroundColor: "var(--color-bg-card)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "6px",
+                backgroundColor: C.bgPanel,
+                border: `1px solid ${C.border}`,
+                borderRadius: C.radiusButton,
                 padding: "6px 32px 6px 12px",
                 fontSize: "13px",
                 fontWeight: 500,
-                color: "var(--color-text-main)",
+                color: C.textPrimary,
                 cursor: "pointer",
                 outline: "none",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
@@ -1972,7 +1954,7 @@ function Filters({
               style={{
                 fontSize: "11px",
                 fontWeight: 700,
-                color: "var(--color-text-muted)",
+                color: C.textSecondary,
                 textTransform: "uppercase",
                 letterSpacing: "0.5px",
               }}
@@ -2123,13 +2105,13 @@ function App() {
           style={{
             width: 36,
             height: 36,
-            border: "3px solid var(--color-border)",
-            borderTopColor: "var(--color-brand-primary)",
+            border: `3px solid ${C.border}`,
+            borderTopColor: C.blue,
             borderRadius: "50%",
             animation: "spin 0.8s linear infinite",
           }}
         />
-        <div style={{ fontSize: 14, color: "var(--color-text-muted)", fontWeight: 600 }}>Loading portfolio data…</div>
+        <div style={{ fontSize: 13, color: C.textSecondary, fontWeight: 600 }}>Loading portfolio data…</div>
       </div>
     );
   }
@@ -2151,11 +2133,11 @@ function App() {
         <div
           style={{
             padding: "16px 20px",
-            background: "var(--color-status-danger-bg)",
-            border: "1px solid var(--color-status-danger)",
-            borderRadius: 12,
-            color: "var(--color-status-danger)",
-            fontSize: 14,
+            background: C.redSoft,
+            border: `1px solid ${C.red}`,
+            borderRadius: C.radiusHero,
+            color: C.red,
+            fontSize: 13,
             fontWeight: 600,
             maxWidth: 400,
           }}
@@ -2171,7 +2153,7 @@ function App() {
       className="initiative-report"
       style={{
         minHeight: "100vh",
-        padding: "24px 32px",
+        padding: "24px 28px",
       }}
     >
       <div
@@ -2179,12 +2161,12 @@ function App() {
         style={{
           background: C.bgPanel,
           borderBottom: `1px solid ${C.border}`,
-          padding: "14px 24px",
+          padding: "12px 24px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: "12px",
-          margin: "-24px -32px 24px -32px",
+          margin: "-24px -28px 24px -28px",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2210,7 +2192,7 @@ function App() {
           <div style={{ width: 1, height: 18, background: C.border, flexShrink: 0 }} />
           <div style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, letterSpacing: "-0.01em", fontFamily: "'EverydaySans', 'Inter', sans-serif" }}>Product Hub</div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: C.textSecondary }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.textSecondary }}>
           <StatusDot color={C.green} size={7} />
           Live · {fy === "All" ? "All Years" : fy}
         </div>
@@ -2243,30 +2225,30 @@ function App() {
                 alignItems: "center",
                 width: "100%",
                 padding: "16px 24px",
-                background: "var(--color-status-warning-bg)",
-                border: "1px solid var(--color-status-warning-text)",
+                background: C.amberSoft,
+                border: `1px solid ${C.amberDark}`,
                 borderLeftWidth: "4px",
-                borderLeftColor: "var(--color-status-warning-text)",
-                borderRadius: isBannerExpanded ? "8px 8px 0 0" : "8px",
+                borderLeftColor: C.amberDark,
+                borderRadius: isBannerExpanded ? `${C.radiusCard}px ${C.radiusCard}px 0 0` : C.radiusCard,
                 cursor: "pointer",
               }}
             >
-              <span style={{ fontWeight: 600, color: "var(--color-status-warning-text)", fontSize: "14px", display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "var(--color-status-warning)", flexShrink: 0 }} />
-                {attentionCount} items need attention
+              <span style={{ fontWeight: 600, color: C.amberDark, fontSize: "13px", display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: C.amber, flexShrink: 0 }} />
+                {attentionCount} {attentionCount === 1 ? 'item needs' : 'items need'} attention
               </span>
-              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-status-warning-text)", display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: "13px", fontWeight: 600, color: C.amberDark, display: "flex", alignItems: "center", gap: 4 }}>
                 View Details {isBannerExpanded ? <IconChevronUp size={12} color="currentColor" /> : <IconChevronDown size={12} color="currentColor" />}
               </span>
             </div>
             {isBannerExpanded && attentionItems.length > 0 && (
               <div
                 style={{
-                  backgroundColor: "var(--color-bg-card)",
-                  border: "1px solid var(--color-border)",
+                  backgroundColor: C.bgPanel,
+                  border: `1px solid ${C.border}`,
                   borderTop: "none",
-                  borderBottomLeftRadius: "8px",
-                  borderBottomRightRadius: "8px",
+                  borderBottomLeftRadius: C.radiusCard,
+                  borderBottomRightRadius: C.radiusCard,
                   padding: 0,
                   maxHeight: "320px",
                   overflowY: "auto",
@@ -2294,16 +2276,16 @@ function App() {
                           borderBottom:
                             index === attentionItems.length - 1
                               ? "none"
-                              : "1px solid var(--color-border-subtle)",
+                              : `1px solid ${C.borderLight}`,
                           cursor: "pointer",
                         }}
                       >
                         <td
                           style={{
                             padding: "12px 24px",
-                            fontSize: "14px",
+                            fontSize: 13,
                             fontWeight: 600,
-                            color: "var(--color-text-main)",
+                            color: C.textPrimary,
                             width: "50%",
                           }}
                         >
@@ -2313,7 +2295,7 @@ function App() {
                           style={{
                             padding: "12px 24px",
                             fontSize: "12px",
-                            color: "var(--color-text-muted)",
+                            color: C.textSecondary,
                             width: "30%",
                           }}
                         >
@@ -2371,7 +2353,7 @@ function App() {
       {view === "priority" && (
         <>
           <div className="priority-section">
-            <h2 className="section-title" style={{ fontSize: 18, fontWeight: 600, margin: "24px 0 16px" }}>
+            <h2 className="section-title" style={{ fontSize: 15, fontWeight: 600, margin: "24px 0 16px" }}>
               Enterprise Priorities
             </h2>
             <div className="card-grid">
@@ -2403,7 +2385,7 @@ function App() {
             </div>
           </div>
           <div className="priority-section">
-            <h2 className="section-title" style={{ fontSize: 18, fontWeight: 600, margin: "32px 0 16px" }}>
+            <h2 className="section-title" style={{ fontSize: 15, fontWeight: 600, margin: "32px 0 16px" }}>
               Other Priorities
             </h2>
             <div className="card-grid">
@@ -2476,7 +2458,7 @@ function App() {
           flexWrap: "wrap",
         }}
       >
-        <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>Legend:</span>
+        <span style={{ fontSize: 11, color: C.textSecondary }}>Legend:</span>
         {(["on-track", "at-risk", "off-track"] as const).map((s) => (
           <span
             key={s}
@@ -2493,8 +2475,8 @@ function App() {
             {STATUS[s].label}
           </span>
         ))}
-        <span style={{ fontSize: 11, color: "var(--color-text-muted)", marginLeft: 8 }}>PM · AI Status</span>
-        <span style={{ fontSize: 11, color: "var(--color-brand-primary)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <span style={{ fontSize: 11, color: C.textSecondary, marginLeft: 8 }}>PM · AI Status</span>
+        <span style={{ fontSize: 11, color: C.blue, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
           <IconExternalLink size={10} color="currentColor" /> Click a card to open side sheet
         </span>
       </div>
