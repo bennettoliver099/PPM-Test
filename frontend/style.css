@@ -915,13 +915,15 @@
   background-color: var(--color-bg-hover);
 }
 
-/* --- Badges & Chips — always 4px radius, 2px 8px padding, 11px/600 per spec --- */
+/* --- Badges & Chips — always 4px radius, 2px 6px padding, 10px/600 per spec --- */
 .ld-badge {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   font-family: var(--font-family-base);
-  padding: 2px 8px;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: #ffffff;
   white-space: nowrap;
   flex-shrink: 0;
   display: inline-flex;
@@ -929,42 +931,74 @@
   gap: 4px;
 }
 .badge-neutral {
-  background-color: #f3f4f6;
+  background-color: #ffffff;
   color: var(--color-text-muted);
+  border-color: var(--color-border);
 }
 .badge-success {
-  background-color: var(--color-status-success-bg);
+  background-color: #ffffff;
   color: var(--color-status-success-text);
+  border-color: var(--color-border);
 }
 .badge-warning {
-  background-color: var(--color-status-warning-bg);
+  background-color: #ffffff;
   color: var(--color-status-warning-text);
+  border-color: var(--color-border);
 }
 .badge-danger {
-  background-color: var(--color-status-danger-bg);
+  background-color: #ffffff;
   color: var(--color-status-danger-text);
+  border-color: var(--color-border);
 }
 .badge-red {
-  background-color: var(--color-status-danger-bg);
+  background-color: #ffffff;
   color: var(--color-status-danger-text);
+  border-color: var(--color-border);
 }
 .badge-yellow {
-  background-color: var(--color-status-warning-bg);
+  background-color: #ffffff;
   color: var(--color-status-warning-text);
+  border-color: var(--color-border);
 }
 .badge-green {
-  background-color: var(--color-status-success-bg);
+  background-color: #ffffff;
   color: var(--color-status-success-text);
+  border-color: var(--color-border);
 }
 .badge-ai {
-  background-color: var(--color-ai-bg);
+  background-color: #ffffff;
   color: var(--color-ai);
-  border: 1px solid rgba(139, 70, 255, 0.25);
+  border: 1px solid var(--color-border);
 }
 .badge-ai-warning {
-  background-color: var(--color-status-warning-bg);
+  background-color: #ffffff;
   color: var(--color-status-warning-text);
-  border: 1px dashed var(--color-status-warning);
+  border: 1px solid var(--color-border);
+}
+.badge-on-track {
+  background-color: #ffffff;
+  color: var(--color-status-success-text);
+  border-color: var(--color-border);
+}
+.badge-at-risk {
+  background-color: #ffffff;
+  color: var(--color-status-warning-text);
+  border-color: var(--color-border);
+}
+.badge-off-track {
+  background-color: #ffffff;
+  color: var(--color-status-danger-text);
+  border-color: var(--color-border);
+}
+.badge-done, .badge-complete, .badge-completed {
+  background-color: #ffffff;
+  color: var(--color-status-success-text);
+  border-color: var(--color-border);
+}
+.badge-unassigned, .badge-pending, .badge-unknown {
+  background-color: #ffffff;
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
 }
 
 /* Epic row status dot (Side Sheet hierarchy) — bright colors for visual dots */

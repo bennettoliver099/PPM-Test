@@ -120,23 +120,25 @@ function StatusDot({ color, size = 6 }: { color: string; size?: number }) {
 type EntityType = 'goal' | 'initiative' | 'project' | 'capability' | 'epic';
 
 const ENTITY_COLORS: Record<EntityType, { color: string; bg: string }> = {
-  goal:        { color: C.blue,          bg: C.blueSoft },
-  initiative:  { color: C.purpleDark,    bg: C.purpleSoft },
-  project:     { color: C.textSecondary, bg: C.borderLight },
-  capability:  { color: C.greenDark,     bg: C.greenSoft },
-  epic:        { color: C.amberDark,     bg: C.amberSoft },
+  goal:        { color: C.textSecondary, bg: C.bgPanel },
+  initiative:  { color: C.textSecondary, bg: C.bgPanel },
+  project:     { color: C.textSecondary, bg: C.bgPanel },
+  capability:  { color: C.textSecondary, bg: C.bgPanel },
+  epic:        { color: C.textSecondary, bg: C.bgPanel },
 };
 
 function TypeBadge({ type }: { type: EntityType }) {
   const ec = ENTITY_COLORS[type];
   return (
     <span style={{
-      fontSize: 10, fontWeight: 700, fontFamily: C.font,
+      fontSize: 10, fontWeight: 600, fontFamily: C.font,
       color: ec.color, backgroundColor: ec.bg,
-      padding: '2px 8px', borderRadius: C.radiusChip,
-      textTransform: 'uppercase' as const, letterSpacing: '0.1em',
+      border: `1px solid ${C.border}`,
+      padding: '1px 6px', borderRadius: C.radiusChip,
+      textTransform: 'uppercase' as const, letterSpacing: '0.08em',
       whiteSpace: 'nowrap' as const, flexShrink: 0, lineHeight: '16px',
       display: 'inline-flex', alignItems: 'center',
+      alignSelf: 'flex-start',
     }}>
       {type}
     </span>
@@ -307,7 +309,12 @@ function Badge({ status }: { status: InitiativeStatus }) {
   const s = STATUS[status] ?? STATUS["on-track"];
   const variant =
     status === "on-track" ? "badge-success" : status === "at-risk" ? "badge-warning" : "badge-danger";
-  return <span className={`ld-badge ${variant}`}>{s.label}</span>;
+  return (
+    <span className={`ld-badge ${variant}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+      <StatusDot color={s.dot} size={5} />
+      {s.label}
+    </span>
+  );
 }
 
 function Bar({
@@ -373,15 +380,125 @@ function DependencyTags({ depCount, depScore }: { depCount: number; depScore: nu
   );
 }
 
-/** Single pill for SideSheet capability cards: "🔗 N GPA Dependencies (High Complexity)" with dynamic color. */
+/** Compact dependency pill: "N deps · High" */
 function DependencyPill({ depCount, depScore }: { depCount: number; depScore: number }) {
   const complexity = getComplexityLabel(depScore);
   const variant =
     complexity === "High" ? "badge-danger" : complexity === "Medium" ? "badge-warning" : "badge-neutral";
   return (
     <span className={`ld-badge ${variant}`} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-      <IconLink size={11} color="currentColor" /> {depCount} GPA Dependencies ({complexity} Complexity)
+      <IconLink size={11} color="currentColor" /> {depCount} dep{depCount !== 1 ? "s" : ""} · {complexity}
     </span>
+  );
+}
+
+function epicStatusColor(status: string | null | undefined): string {
+  const s = (status ?? "").toLowerCase();
+  return s === "red" ? C.red : s === "yellow" ? C.amber : C.green;
+}
+
+function capStatusClass(status: string | null | undefined): string {
+  const s = (status ?? "").toLowerCase().replace(/\s+/g, "-");
+  return `ld-badge badge-${s || "neutral"}`;
+}
+
+interface CapabilityRowProps {
+  cap: {
+    id: string;
+    name: string;
+    status?: string | null;
+    aiStatus?: string | null;
+    startQ?: string | null;
+    launchQ?: string | null;
+    size?: string | null;
+    depCount: number;
+    depScore: number;
+    statusNotes?: string | null;
+    epics?: Array<{ id: string; name: string; status?: string | null }>;
+    metrics?: Array<{ id: string; name: string; baseline: number | null; target: number | null; actual: number | null; status: InitiativeStatus }>;
+  };
+  isLast?: boolean;
+}
+
+function CapabilityRow({ cap, isLast }: CapabilityRowProps) {
+  const statusBorderColor =
+    (cap.status ?? "").toLowerCase() === "red" ? C.red
+    : (cap.status ?? "").toLowerCase() === "yellow" ? C.amber
+    : C.green;
+
+  return (
+    <div style={{
+      paddingTop: 12, paddingBottom: 12,
+      borderBottom: isLast ? "none" : `1px solid ${C.borderLight}`,
+    }}>
+      {/* Badge above name */}
+      <TypeBadge type="capability" />
+      {/* Name + status row */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginTop: 4, marginBottom: 6 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary, lineHeight: 1.4, flex: 1, minWidth: 0 }}>{cap.name}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {cap.aiStatus && cap.aiStatus !== cap.status && (
+            <span className="ld-badge badge-ai" title="AI detects a discrepancy" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <IconSparkle size={10} color="currentColor" /> AI
+            </span>
+          )}
+          <span className={capStatusClass(cap.status)}>{cap.status || "Unassigned"}</span>
+        </div>
+      </div>
+      {/* Meta row */}
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, fontSize: 12, color: C.textSecondary }}>
+        {cap.startQ && cap.launchQ && (
+          <span>{cap.startQ} → {cap.launchQ}</span>
+        )}
+        {cap.size && <span className="ld-badge badge-neutral" style={{ fontSize: 11 }}>{cap.size}</span>}
+        <DependencyPill depCount={cap.depCount} depScore={cap.depScore} />
+      </div>
+      {/* Status notes */}
+      {cap.statusNotes && (
+        <div style={{
+          marginTop: 8, padding: "8px 12px",
+          backgroundColor: C.bgPage,
+          borderLeft: `3px solid ${statusBorderColor}`,
+          fontSize: 12, color: C.textSecondary, lineHeight: 1.5,
+        }}>
+          {cap.statusNotes}
+        </div>
+      )}
+      {/* Epics */}
+      {cap.epics && cap.epics.length > 0 && (
+        <div style={{ marginTop: 8, paddingLeft: 12, borderLeft: `2px solid ${C.borderLight}` }}>
+          {cap.epics.map((epic, i) => (
+            <div key={epic.id} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "5px 0",
+              borderTop: i > 0 ? `1px solid ${C.borderLight}` : "none",
+              fontSize: 12,
+            }}>
+              <StatusDot color={epicStatusColor(epic.status)} size={6} />
+              <span style={{ color: C.textPrimary, fontWeight: 500, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{epic.name}</span>
+              <span style={{ fontSize: 11, color: C.textSecondary, flexShrink: 0 }}>{epic.status}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Metrics table */}
+      {cap.metrics && cap.metrics.length > 0 && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 64px 64px 64px 90px", gap: 8, fontSize: 10, fontWeight: 600, color: C.textTertiary, textTransform: "uppercase", letterSpacing: "0.06em", paddingBottom: 4, borderBottom: `1px solid ${C.border}` }}>
+            <span>Metric</span><span style={{ textAlign: "right" }}>Baseline</span><span style={{ textAlign: "right" }}>Target</span><span style={{ textAlign: "right" }}>Actual</span><span>Status</span>
+          </div>
+          {cap.metrics.map((metric) => (
+            <div key={metric.id} style={{ display: "grid", gridTemplateColumns: "1fr 64px 64px 64px 90px", gap: 8, fontSize: 12, alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${C.borderLight}` }}>
+              <span style={{ color: C.textPrimary, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{metric.name}</span>
+              <span style={{ textAlign: "right", color: C.textSecondary }}>{metric.baseline !== null ? metric.baseline.toLocaleString() : "—"}</span>
+              <span style={{ textAlign: "right", color: C.textSecondary }}>{metric.target !== null ? metric.target.toLocaleString() : "—"}</span>
+              <span style={{ textAlign: "right", color: C.blue, fontWeight: 600 }}>{metric.actual !== null ? metric.actual.toLocaleString() : "—"}</span>
+              <Badge status={metric.status} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -631,7 +748,7 @@ function SideSheet({
               >
                 <IconArrowLeft size={12} color={C.textSecondary} /> Back to Priority
               </button>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
                 <TypeBadge type="initiative" />
                 <div className="side-sheet-header__title" style={{ margin: 0 }}>{initiative.name}</div>
               </div>
@@ -690,23 +807,16 @@ function SideSheet({
                   }}
                 >
                   {/* Level 2: Project Header */}
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      marginBottom: "16px",
-                      paddingBottom: "12px",
-                      borderBottom: `1px solid ${C.borderLight}`,
-                    }}
-                  >
+                  <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${C.borderLight}` }}>
                     <TypeBadge type="project" />
-                    <h3 style={{ margin: 0, fontSize: 15, color: C.textPrimary, fontWeight: 600 }}>
-                      {project.name}
-                    </h3>
-                    <span className={`ld-badge badge-${project.status?.toLowerCase().replace(/\s+/g, "-") || "neutral"}`}>
-                      {project.status || "Unassigned"}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                      <h3 style={{ margin: 0, fontSize: 15, color: C.textPrimary, fontWeight: 600, flex: 1, minWidth: 0 }}>
+                        {project.name}
+                      </h3>
+                      <span className={`ld-badge badge-${project.status?.toLowerCase().replace(/\s+/g, "-") || "neutral"}`}>
+                        {project.status || "Unassigned"}
+                      </span>
+                    </div>
                   </div>
                   {/* Level 3: Capabilities List */}
                   <div
@@ -714,149 +824,17 @@ function SideSheet({
                     style={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: "16px",
-                      paddingLeft: 40,
+                      paddingLeft: 16,
+                      borderLeft: `2px solid ${C.borderLight}`,
+                      marginLeft: 8,
                     }}
                   >
                     {project.capabilities && project.capabilities.length > 0 ? (
-                      project.capabilities.map((cap) => (
-                        <div
-                          key={cap.id}
-                          className="capability-card"
-                          style={{ backgroundColor: C.bgPanel, padding: "12px", borderRadius: C.radiusCard }}
-                        >
-                          {/* Capability Header & Dual RAG */}
-                          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                              <TypeBadge type="capability" />
-                              <span style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary }}>{cap.name}</span>
-                            </div>
-                            <span className={`ld-badge badge-${cap.status?.toLowerCase().replace(/\s+/g, "-") || "neutral"}`}>
-                              {cap.status || "Unassigned"}
-                            </span>
-                            {cap.aiStatus && cap.aiStatus !== cap.status && (
-                              <span className="ld-badge badge-ai" title="AI detects a discrepancy" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-                                <IconSparkle size={10} color="currentColor" /> AI flags as {cap.aiStatus}
-                              </span>
-                            )}
-                          </div>
-                          <div className="capability-card__main">
-                            {(cap.startQ && cap.launchQ) ? (
-                              <div className="capability-card__meta">{cap.startQ} to {cap.launchQ}</div>
-                            ) : null}
-                            <div className="capability-card__dependency">
-                              <DependencyPill depCount={cap.depCount} depScore={cap.depScore} />
-                            </div>
-                          </div>
-                          <div className="capability-card__actions">
-                            <span className="ld-badge badge-neutral">{cap.size}</span>
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: 600,
-                                color: C.blue,
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                              }}
-                              onClick={() => alert(`Navigating to Roadmap for ${cap.name}`)}
-                            >
-                              View Roadmap <IconExternalLink size={11} color="currentColor" />
-                            </div>
-                          </div>
-                          {/* Status Notes */}
-                          {cap.statusNotes && (
-                            <div
-                              className="status-notes-box"
-                              style={{
-                                marginTop: "8px",
-                                padding: "12px",
-                                backgroundColor: C.bgPanel,
-                                borderLeft: `3px solid ${cap.status?.toLowerCase() === "red" ? C.red : cap.status?.toLowerCase() === "yellow" ? C.amber : C.green}`,
-                                fontSize: "12px",
-                                color: C.textSecondary,
-                              }}
-                            >
-                              <strong>Status Notes:</strong> {cap.statusNotes}
-                            </div>
-                          )}
-                          {/* Level 4: Epics */}
-                          {cap.epics && cap.epics.length > 0 && (
-                            <div
-                              className="epic-list-container"
-                              style={{
-                                marginTop: "12px",
-                                paddingLeft: 40,
-                              }}
-                            >
-                              <h5 style={{ fontSize: "11px", textTransform: "uppercase", color: C.textSecondary, marginBottom: "8px" }}>
-                                Epics ({cap.epics.length})
-                              </h5>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                {cap.epics.map((epic) => (
-                                  <div
-                                    key={epic.id}
-                                    className="epic-row"
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 8,
-                                      fontSize: "13px",
-                                      backgroundColor: C.bgPanel,
-                                      padding: "8px 12px",
-                                      borderRadius: C.radiusChip,
-                                      border: `1px solid ${C.borderLight}`,
-                                    }}
-                                  >
-                                    <StatusDot color={epic.status?.toLowerCase() === "red" ? C.red : epic.status?.toLowerCase() === "yellow" ? C.amber : C.green} size={7} />
-                                    <TypeBadge type="epic" />
-                                    <span style={{ color: C.textPrimary, fontWeight: 500 }}>{epic.name}</span>
-                                    <span style={{ marginLeft: "auto", fontSize: "11px", color: C.textSecondary }}>{epic.status}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {cap.metrics && cap.metrics.length > 0 && (
-                            <div className="capability-card__metrics" style={{ marginTop: 12 }}>
-                              <div className="capability-card__metrics-title">Metrics Health</div>
-                              <div className="metric-grid metric-grid-header">
-                                <span className="metric-name capability-metric-name">Metric</span>
-                                <span className="capability-metric-label metric-col-right">Baseline</span>
-                                <span className="capability-metric-label metric-col-right">Target</span>
-                                <span className="capability-metric-label metric-col-right">Actual</span>
-                                <span className="capability-metric-label">Status</span>
-                              </div>
-                              <div className="metric-grid">
-                                {cap.metrics.map((metric) => (
-                                  <React.Fragment key={metric.id}>
-                                    <span className="metric-name capability-metric-name">{metric.name}</span>
-                                    <span className="capability-metric-cell metric-col-right">
-                                      <span className="capability-metric-value">
-                                        {metric.baseline !== null ? metric.baseline.toLocaleString() : "—"}
-                                      </span>
-                                    </span>
-                                    <span className="capability-metric-cell metric-col-right">
-                                      <span className="capability-metric-value">
-                                        {metric.target !== null ? metric.target.toLocaleString() : "—"}
-                                      </span>
-                                    </span>
-                                    <span className="capability-metric-cell metric-col-right">
-                                      <span className="capability-metric-value capability-metric-value--actual">
-                                        {metric.actual !== null ? metric.actual.toLocaleString() : "—"}
-                                      </span>
-                                    </span>
-                                    <Badge status={metric.status} />
-                                  </React.Fragment>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                      project.capabilities.map((cap, idx) => (
+                        <CapabilityRow key={cap.id} cap={cap} isLast={idx === project.capabilities!.length - 1} />
                       ))
                     ) : (
-                      <div style={{ fontSize: "12px", color: C.textSecondary, fontStyle: "italic" }}>
+                      <div style={{ fontSize: "12px", color: C.textSecondary, fontStyle: "italic", padding: "8px 0" }}>
                         No capabilities linked to this project.
                       </div>
                     )}
@@ -887,135 +865,13 @@ function SideSheet({
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: "16px",
-                    paddingLeft: 40,
+                    paddingLeft: 16,
+                    borderLeft: `2px solid ${C.borderLight}`,
+                    marginLeft: 8,
                   }}
                 >
-                  {initiative.orphanedCapabilities.map((cap) => (
-                    <div
-                      key={cap.id}
-                      className="capability-card"
-                      style={{ backgroundColor: C.bgPanel, padding: "12px", borderRadius: C.radiusCard }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          <TypeBadge type="capability" />
-                          <span style={{ fontSize: 13, fontWeight: 600, color: C.textPrimary }}>{cap.name}</span>
-                        </div>
-                        <span className={`ld-badge badge-${cap.status?.toLowerCase().replace(/\s+/g, "-") || "neutral"}`}>
-                          {cap.status || "Unassigned"}
-                        </span>
-                        {cap.aiStatus && cap.aiStatus !== cap.status && (
-                          <span className="ld-badge badge-ai" title="AI detects a discrepancy" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-                            <IconSparkle size={10} color="currentColor" /> AI flags as {cap.aiStatus}
-                          </span>
-                        )}
-                      </div>
-                      <div className="capability-card__main">
-                        {(cap.startQ && cap.launchQ) ? (
-                          <div className="capability-card__meta">{cap.startQ} to {cap.launchQ}</div>
-                        ) : null}
-                        <div className="capability-card__dependency">
-                          <DependencyPill depCount={cap.depCount} depScore={cap.depScore} />
-                        </div>
-                      </div>
-                      <div className="capability-card__actions">
-                        <span className="ld-badge badge-neutral">{cap.size}</span>
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          onClick={() => alert(`Navigating to Roadmap for ${cap.name}`)}
-                        >
-                          View on Roadmap
-                        </button>
-                      </div>
-                      {cap.statusNotes && (
-                        <div
-                          className="status-notes-box"
-                          style={{
-                            marginTop: "8px",
-                            padding: "12px",
-                            backgroundColor: C.bgPanel,
-                            borderLeft: `3px solid ${cap.status?.toLowerCase() === "red" ? C.red : cap.status?.toLowerCase() === "yellow" ? C.amber : C.green}`,
-                            fontSize: "12px",
-                            color: C.textSecondary,
-                          }}
-                        >
-                          <strong>Status Notes:</strong> {cap.statusNotes}
-                        </div>
-                      )}
-                      {cap.epics && cap.epics.length > 0 && (
-                        <div
-                          className="epic-list-container"
-                          style={{
-                            marginTop: "12px",
-                            paddingLeft: 40,
-                          }}
-                        >
-                          <h5 style={{ fontSize: "11px", textTransform: "uppercase", color: C.textSecondary, marginBottom: "8px" }}>
-                            Epics ({cap.epics.length})
-                          </h5>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            {cap.epics.map((epic) => (
-                              <div
-                                key={epic.id}
-                                className="epic-row"
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 8,
-                                  fontSize: "13px",
-                                  backgroundColor: C.bgPanel,
-                                  padding: "8px 12px",
-                                  borderRadius: C.radiusChip,
-                                  border: `1px solid ${C.borderLight}`,
-                                }}
-                              >
-                                <StatusDot color={epic.status?.toLowerCase() === "red" ? C.red : epic.status?.toLowerCase() === "yellow" ? C.amber : C.green} size={7} />
-                                <TypeBadge type="epic" />
-                                <span style={{ color: C.textPrimary, fontWeight: 500 }}>{epic.name}</span>
-                                <span style={{ marginLeft: "auto", fontSize: "11px", color: C.textSecondary }}>{epic.status}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {cap.metrics && cap.metrics.length > 0 && (
-                        <div className="capability-card__metrics" style={{ marginTop: 12 }}>
-                          <div className="capability-card__metrics-title">Metrics Health</div>
-                          <div className="metric-grid metric-grid-header">
-                            <span className="metric-name capability-metric-name">Metric</span>
-                            <span className="capability-metric-label metric-col-right">Baseline</span>
-                            <span className="capability-metric-label metric-col-right">Target</span>
-                            <span className="capability-metric-label metric-col-right">Actual</span>
-                            <span className="capability-metric-label">Status</span>
-                          </div>
-                          <div className="metric-grid">
-                            {cap.metrics.map((metric) => (
-                              <React.Fragment key={metric.id}>
-                                <span className="metric-name capability-metric-name">{metric.name}</span>
-                                <span className="capability-metric-cell metric-col-right">
-                                  <span className="capability-metric-value">
-                                    {metric.baseline !== null ? metric.baseline.toLocaleString() : "—"}
-                                  </span>
-                                </span>
-                                <span className="capability-metric-cell metric-col-right">
-                                  <span className="capability-metric-value">
-                                    {metric.target !== null ? metric.target.toLocaleString() : "—"}
-                                  </span>
-                                </span>
-                                <span className="capability-metric-cell metric-col-right">
-                                  <span className="capability-metric-value capability-metric-value--actual">
-                                    {metric.actual !== null ? metric.actual.toLocaleString() : "—"}
-                                  </span>
-                                </span>
-                                <Badge status={metric.status} />
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  {initiative.orphanedCapabilities.map((cap, idx) => (
+                    <CapabilityRow key={cap.id} cap={cap} isLast={idx === initiative.orphanedCapabilities!.length - 1} />
                   ))}
                 </div>
               </div>
@@ -1135,9 +991,9 @@ function SideSheet({
                   <div style={{ minWidth: 0, flex: 1 }}>
                     {/* Top row: name + status badge */}
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flex: 1 }}>
                         <TypeBadge type="initiative" />
-                        <div className="ld-body-s" style={{ fontWeight: 600, fontSize: 13, color: C.textPrimary, lineHeight: 1.4 }}>{init.name}</div>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: C.textPrimary, lineHeight: 1.4 }}>{init.name}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                         <Badge status={init.trueStatus} />
@@ -1350,6 +1206,25 @@ function AggCard({
         </div>
       </div>
 
+      {/* Status progress bar */}
+      <div style={{ display: "flex", height: 4, borderRadius: 2, overflow: "hidden", backgroundColor: C.borderLight, marginBottom: 12 }}>
+        {total > 0 ? (
+          <>
+            <div style={{ width: `${(onTrack / total) * 100}%`, backgroundColor: C.green, transition: "width 0.2s" }} />
+            <div style={{ width: `${(atRisk / total) * 100}%`, backgroundColor: C.amber, transition: "width 0.2s" }} />
+            <div style={{ width: `${(offTrack / total) * 100}%`, backgroundColor: C.red, transition: "width 0.2s" }} />
+          </>
+        ) : (
+          <div style={{ width: "100%", backgroundColor: C.borderLight }} />
+        )}
+      </div>
+      {/* Status legend */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, fontSize: 11, fontWeight: 600 }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 4, color: C.greenDark }}><StatusDot color={C.green} size={5} />{onTrack}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4, color: C.amberDark }}><StatusDot color={C.amber} size={5} />{atRisk}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4, color: C.redDark }}><StatusDot color={C.red} size={5} />{offTrack}</span>
+      </div>
+
       {/* Secondary Metrics: Clean borderless row */}
       <div
         style={{
@@ -1386,24 +1261,12 @@ function AggCard({
         ))}
       </div>
 
-      {/* Bottom: Subdued Financial Targets */}
-      <div
-        style={{
-          marginTop: "auto",
-          paddingTop: "16px",
-          borderTop: `1px solid ${C.borderLight}`,
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: "11px",
-          fontWeight: 600,
-          color: C.textSecondary,
-          textTransform: "uppercase",
-          letterSpacing: "0.5px",
-        }}
-      >
-        <span>TARGET: {displayFinance || "NOT SET"}</span>
-        <span>ACTUAL: TBD</span>
-      </div>
+      {financeStrings.length > 0 && (
+        <div style={{ marginTop: "auto", paddingTop: 16, borderTop: `1px solid ${C.borderLight}`, display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, color: C.textSecondary, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          <span>TARGET: {displayFinance}</span>
+          <span>ACTUAL: TBD</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1694,7 +1557,6 @@ function MarketMultiSelect({
               zIndex: 1000,
               maxHeight: "250px",
               overflowY: "auto",
-              overflow: "hidden",
             }}
           >
             <div
@@ -2000,8 +1862,8 @@ function App() {
     return Array.from(allMarkets).sort();
   }, [initiatives]);
 
-  /** Compound filter: Segment AND Fiscal Year AND Market (intersection). */
-  const filteredInitiatives = useMemo(
+  /** Base filter: Segment + FY + Market only (no statusFilter). Used for summary stats. */
+  const filteredBase = useMemo(
     () =>
       initiatives.filter((init) => {
         const matchSeg = seg === "All" || (init.segments && init.segments.includes(seg));
@@ -2009,10 +1871,18 @@ function App() {
         const matchMarket =
           selectedMarkets.length === 0 ||
           (init.market && selectedMarkets.some((m) => init.market!.includes(m)));
-        const matchStatus = !statusFilter || init.trueStatus === statusFilter;
-        return matchSeg && matchFy && matchMarket && matchStatus;
+        return matchSeg && matchFy && matchMarket;
       }),
-    [initiatives, seg, fy, selectedMarkets, statusFilter]
+    [initiatives, seg, fy, selectedMarkets]
+  );
+
+  /** Full filter: base + statusFilter. Used for the card grid. */
+  const filteredInitiatives = useMemo(
+    () =>
+      statusFilter
+        ? filteredBase.filter((i) => i.trueStatus === statusFilter)
+        : filteredBase,
+    [filteredBase, statusFilter]
   );
 
   const priorities = useMemo(() => buildPriorities(initiatives), [initiatives]);
@@ -2021,21 +1891,21 @@ function App() {
     [filteredInitiatives]
   );
 
-  /** Summary and cards both use the same compound-filtered priorities. */
-  const summaryPriorities = filtered;
+  /** Summary uses base filter so status counts don't collapse when filtering. */
+  const summaryPriorities = useMemo(() => buildPriorities(filteredBase), [filteredBase]);
 
-  /** Global status counts for Portfolio Health legend (dot status). */
-  const globalOnTrack = filteredInitiatives.filter((i) => i.trueStatus === "on-track").length;
-  const globalAtRisk = filteredInitiatives.filter((i) => i.trueStatus === "at-risk").length;
-  const globalOffTrack = filteredInitiatives.filter((i) => i.trueStatus === "off-track").length;
+  /** Global status counts drawn from base filter (unaffected by statusFilter). */
+  const globalOnTrack = filteredBase.filter((i) => i.trueStatus === "on-track").length;
+  const globalAtRisk = filteredBase.filter((i) => i.trueStatus === "at-risk").length;
+  const globalOffTrack = filteredBase.filter((i) => i.trueStatus === "off-track").length;
 
   /** Initiatives that need attention (at-risk or off-track) for the banner expanded list. */
   const attentionItems = useMemo(
     () =>
-      filteredInitiatives.filter(
+      filteredBase.filter(
         (i) => i.trueStatus === "at-risk" || i.trueStatus === "off-track"
       ),
-    [filteredInitiatives]
+    [filteredBase]
   );
 
   /** Split filtered priorities into Enterprise vs Other (exclude Unassigned). */
@@ -2159,9 +2029,9 @@ function App() {
       <div
         className="global-app-header"
         style={{
-          background: C.bgPanel,
-          borderBottom: `1px solid ${C.border}`,
-          padding: "12px 24px",
+          background: C.walmartBentonvilleBlue,
+          borderBottom: "none",
+          padding: "16px 24px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -2179,20 +2049,20 @@ function App() {
             <path fill="#FFC220" d="M70.717,132.746C48.171,119.729,19.341,127.454,6.323,150c-13.017,22.546-5.292,51.376,17.254,64.393c9.876,5.702,120.517,56.396,133.021,58.97c14.332,2.951,28.719-3.415,35.91-15.87c7.191-12.455,5.51-28.096-4.211-39.033C179.815,208.918,80.592,138.447,70.717,132.746z"/>
             <path fill="#FFC220" d="M266.131,0c-26.035,0-47.139,21.105-47.139,47.139c0,11.403,11.418,132.568,15.441,144.685c4.611,13.888,17.317,23.164,31.698,23.164s27.088-9.276,31.698-23.164c4.023-12.117,15.441-133.282,15.441-144.685C313.27,21.105,292.165,0,266.131,0z"/>
           </svg>
-          {/* Official Walmart Wordmark — WMT-Wordmark-Small-TrueBlue-RGB.svg */}
+          {/* Official Walmart Wordmark — white on dark bg */}
           <svg viewBox="0 0 200.818 36.441" height={16} xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }} aria-label="walmart">
-            <polygon fill="#0053E2" points="38.104,0 33.448,23.328 28.222,0 19.147,0 13.921,23.328 9.265,0 0,0 7.554,35.634 18.339,35.634 23.613,11.973 28.887,35.634 39.435,35.634 46.941,0"/>
-            <path fill="#0053E2" d="M59.698,6.557c-5.749,0-9.787,1.948-11.26,3.326v7.602c1.71-1.52,5.321-3.753,10.072-3.753c2.946,0,4.038,0.808,4.038,2.471c0,1.425-1.52,1.995-5.749,2.898c-6.414,1.33-10.12,3.658-10.12,9.217c0,5.131,3.373,8.124,8.267,8.124c4.1,0,6.546-1.904,7.887-4.461v3.653h8.837V18.149C71.671,10.12,67.49,6.557,59.698,6.557z M58.463,30.692c-2.09,0-3.231-1.283-3.231-3.041c0-2.281,1.805-3.183,4.086-3.991c1.189-0.446,2.378-0.911,3.183-1.615v3.943C62.501,28.982,60.934,30.692,58.463,30.692z"/>
-            <rect x="76.09" fill="#0053E2" width="9.17" height="35.634"/>
-            <path fill="#0053E2" d="M123.174,6.652c-4.456,0-7.331,2.683-8.833,6.252c-0.803-3.822-3.478-6.252-7.226-6.252c-4.243,0-7.009,2.475-8.41,5.953V7.459h-9.027v28.174h9.17V20.002c0-3.848,1.283-6.034,4.038-6.034c2.233,0,2.993,1.52,2.993,3.896v17.769h9.17V20.002c0-3.848,1.283-6.034,4.038-6.034c2.233,0,2.993,1.52,2.993,3.896v17.769h9.17V16.582C131.251,10.643,128.448,6.652,123.174,6.652z"/>
-            <path fill="#0053E2" d="M147.31,6.557c-5.749,0-9.787,1.948-11.26,3.326v7.602c1.71-1.52,5.321-3.753,10.072-3.753c2.946,0,4.038,0.808,4.038,2.471c0,1.425-1.52,1.995-5.749,2.898c-6.414,1.33-10.12,3.658-10.12,9.217c0,5.131,3.373,8.124,8.267,8.124c4.1,0,6.546-1.904,7.887-4.461v3.653h8.837V18.149C159.283,10.12,155.102,6.557,147.31,6.557z M146.074,30.692c-2.091,0-3.231-1.283-3.231-3.041c0-2.281,1.805-3.183,4.086-3.991c1.189-0.446,2.378-0.911,3.183-1.615v3.943C150.113,28.982,148.545,30.692,146.074,30.692z"/>
-            <path fill="#0053E2" d="M172.728,15.379v-7.92h-9.027v28.174h9.217V23.661c0-5.511,3.611-6.984,6.889-6.984c1.093,0,2.138,0.143,2.613,0.285V7.269C177.062,7.021,173.931,10.299,172.728,15.379z"/>
-            <path fill="#0053E2" d="M200.818,14.586V7.459h-5.796V1.995h-9.17v24.231c0,6.794,3.801,9.977,9.93,9.977c2.851,0,4.371-0.57,5.036-0.998v-7.079c-0.523,0.38-1.378,0.665-2.471,0.665c-1.995,0.048-3.326-0.855-3.326-3.848V14.586H200.818z"/>
+            <polygon fill="#ffffff" points="38.104,0 33.448,23.328 28.222,0 19.147,0 13.921,23.328 9.265,0 0,0 7.554,35.634 18.339,35.634 23.613,11.973 28.887,35.634 39.435,35.634 46.941,0"/>
+            <path fill="#ffffff" d="M59.698,6.557c-5.749,0-9.787,1.948-11.26,3.326v7.602c1.71-1.52,5.321-3.753,10.072-3.753c2.946,0,4.038,0.808,4.038,2.471c0,1.425-1.52,1.995-5.749,2.898c-6.414,1.33-10.12,3.658-10.12,9.217c0,5.131,3.373,8.124,8.267,8.124c4.1,0,6.546-1.904,7.887-4.461v3.653h8.837V18.149C71.671,10.12,67.49,6.557,59.698,6.557z M58.463,30.692c-2.09,0-3.231-1.283-3.231-3.041c0-2.281,1.805-3.183,4.086-3.991c1.189-0.446,2.378-0.911,3.183-1.615v3.943C62.501,28.982,60.934,30.692,58.463,30.692z"/>
+            <rect x="76.09" fill="#ffffff" width="9.17" height="35.634"/>
+            <path fill="#ffffff" d="M123.174,6.652c-4.456,0-7.331,2.683-8.833,6.252c-0.803-3.822-3.478-6.252-7.226-6.252c-4.243,0-7.009,2.475-8.41,5.953V7.459h-9.027v28.174h9.17V20.002c0-3.848,1.283-6.034,4.038-6.034c2.233,0,2.993,1.52,2.993,3.896v17.769h9.17V20.002c0-3.848,1.283-6.034,4.038-6.034c2.233,0,2.993,1.52,2.993,3.896v17.769h9.17V16.582C131.251,10.643,128.448,6.652,123.174,6.652z"/>
+            <path fill="#ffffff" d="M147.31,6.557c-5.749,0-9.787,1.948-11.26,3.326v7.602c1.71-1.52,5.321-3.753,10.072-3.753c2.946,0,4.038,0.808,4.038,2.471c0,1.425-1.52,1.995-5.749,2.898c-6.414,1.33-10.12,3.658-10.12,9.217c0,5.131,3.373,8.124,8.267,8.124c4.1,0,6.546-1.904,7.887-4.461v3.653h8.837V18.149C159.283,10.12,155.102,6.557,147.31,6.557z M146.074,30.692c-2.091,0-3.231-1.283-3.231-3.041c0-2.281,1.805-3.183,4.086-3.991c1.189-0.446,2.378-0.911,3.183-1.615v3.943C150.113,28.982,148.545,30.692,146.074,30.692z"/>
+            <path fill="#ffffff" d="M172.728,15.379v-7.92h-9.027v28.174h9.217V23.661c0-5.511,3.611-6.984,6.889-6.984c1.093,0,2.138,0.143,2.613,0.285V7.269C177.062,7.021,173.931,10.299,172.728,15.379z"/>
+            <path fill="#ffffff" d="M200.818,14.586V7.459h-5.796V1.995h-9.17v24.231c0,6.794,3.801,9.977,9.93,9.977c2.851,0,4.371-0.57,5.036-0.998v-7.079c-0.523,0.38-1.378,0.665-2.471,0.665c-1.995,0.048-3.326-0.855-3.326-3.848V14.586H200.818z"/>
           </svg>
-          <div style={{ width: 1, height: 18, background: C.border, flexShrink: 0 }} />
-          <div style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, letterSpacing: "-0.01em", fontFamily: "'EverydaySans', 'Inter', sans-serif" }}>Product Hub</div>
+          <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.3)", flexShrink: 0 }} />
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#ffffff", letterSpacing: "-0.01em", fontFamily: "'EverydaySans', 'Inter', sans-serif" }}>Product Hub</div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.textSecondary }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
           <StatusDot color={C.green} size={7} />
           Live · {fy === "All" ? "All Years" : fy}
         </div>
@@ -2208,7 +2078,7 @@ function App() {
           globalAtRisk={globalAtRisk}
           globalOffTrack={globalOffTrack}
           statusFilter={statusFilter}
-          onStatusFilter={setStatusFilter}
+          onStatusFilter={(s) => setStatusFilter((prev) => (prev === s ? null : s))}
         />
       </div>
       {(() => {
